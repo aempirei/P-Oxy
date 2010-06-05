@@ -191,4 +191,9 @@ child1.parent -> @
 child2.parent -> @
 child3.parent -> @
 
-...print ( sprintf "%s from %s\n" child1 @ )
+rescope ...
+
+all 'child1':'child2':'child3' I { s |
+    rescope parent.`s
+    ...print ( sprintf "%s from %s\n" @ parent )
+}

@@ -11,17 +11,17 @@ elseif exists("b:current_syntax")
 	finish
 endif
 
-syn match	poxyOperators	"[-=+\[\]<>?/\\,&~|%#@!]\{1,\}"
+syn match	poxyOperators	"[-^=+\[\]<>?/\\,:;*&~|%#@!]\{1,\}"
 syn match	poxyLambda		"[{|}]"
-syn match	poxyBars		"|[^ ]*|" contains=poxyParam,poxyNode,poxyType
-syn match	poxyNode		"\<[a-z_][[:alnum:]_]*\>"
+syn match	poxyBars		"|\+[^ ]*|\+" contains=poxyParam,poxyNode,poxyType,poxySpecialNode
+syn match	poxyNode		"\<[a-z_][[:alnum:]_]*!*\>[!?]*"
 syn match	poxyType		"\<[A-Z][a-zA-Z]*\>"
 syn match	poxyAssign		"<-"
 syn match	poxyEdge		"->"
 syn match	poxyLink		"[.]"
 syn match	poxyParen		"[()]"
 syn match	poxyOperator	"[~:]"
-syn match	poxySpecialNode "[@^!$]"
+syn match	poxySpecialNode "[@!$]\|\.\.\."
 syn match	poxyParam		"[?*]"
 
 syn match	poxySpecialChar	contained	"\\\([0-9]\+\|o[0-7]\+\|x[0-9a-fA-F]\+\|[\"\\'&\\abfnrtv]\|^[A-Z^_\[\\\]]\)"
@@ -40,7 +40,7 @@ syn match	poxyFloat "[+-]\?\([[:digit:]]\{1,\}\.[[:digit:]]*\|[[:digit:]]*\.[[:d
 syn match	poxyError "\<\(0[89][^ ]*\)"
 
 syn match poxyConditional		"\<\(if\|then\|else\|elseif\)\>"
-syn match poxyKeyword			"\<\(while\|all\|rescope\)\>"
+syn match poxyKeyword			"\<\(is\|do\|while\|all\|rescope\)\>"
 
 syn match	poxySharpBang	"^#!.*"
 syn match	poxyComment		"--.*"

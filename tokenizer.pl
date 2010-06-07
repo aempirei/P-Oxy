@@ -32,12 +32,12 @@ while(length($data) > 0) {
 
 		$token = set("%11s: %s\n", 'comment', $1);
 
-	} elsif($data =~ /\A(\/(?:\\(?:\/|[*?|.+^\$\[\]{}]|$codes)|$range|[^\/])*\/(?:[ims]*\b)?)/) {
+	} elsif($data =~ /\A(\/(?:\\(?:\/|[*?|.+^\$\[\]{}]|$codes)|$range|[^\/])*\/(?:[ims]*\b)?)/ms) {
 		
 		# match
 		$token = set("%11s: %s\n", 'match', $1);
 
-	} elsif($data =~ /\A(\bs\/(?:\\(?:\/|[*?|.+^\$\[\]{}]|$codes)|$range|[^\/])*\/(?:\\(?:\/|$codes)|[^\/])*\/(?:[ims]*\b)?)/) {
+	} elsif($data =~ /\A(\bs\/(?:\\(?:\/|[*?|.+^\$\[\]{}]|$codes)|$range|[^\/])*\/(?:\\(?:\/|$codes)|[^\/])*\/(?:[ims]*\b)?)/ms) {
 
 		# subst
 		$token = set("%11s: %s\n", 'subst', $1);
@@ -62,7 +62,7 @@ while(length($data) > 0) {
 		# literal
 		$token = set("%11s: %s\n", 'literal', $1);
 
-	} elsif($data =~ /\A("(?:\\(?:"|$codes)|[^"])*")/) {
+	} elsif($data =~ /\A("(?:\\(?:"|$codes)|[^"])*")/ms) {
 		
 		#quote
 		$token = set("%11s: %s\n", 'quote', $1);
@@ -72,12 +72,12 @@ while(length($data) > 0) {
 		# paren
 		$token = set("%11s: %s\n", 'paren', $1);
 
-	} elsif($data =~ /\A($sign$dec\.\d*[eE][+-]?$dec)\b/) {
+	} elsif($data =~ /\A($sign$dec\.\d*[eE][+-]?$dec)\b/ms) {
 
 		# float
 		$token = set("%11s: %s\n", 'float', $1);
 
-	} elsif($data =~ /\A($sign$dec\.(?:\d+\b)?)/) {
+	} elsif($data =~ /\A($sign$dec\.(?:\d+\b)?)/ms) {
 
 		# float
 		$token = set("%11s: %s\n", 'float', $1);
@@ -117,12 +117,11 @@ while(length($data) > 0) {
 		# operator
 		$token = set("%11s: %s\n", 'operator', $1);
 
-	} else {
+	} elsif($data =~ /\A(.*?)$/ms) {
 
 		# failure
-		print "failed match!\n";
-		print $data;
-		last;
+		print "failed match at approximately ($1)\n";
+		exit;
 	}
 
 	push @tokens, $token if(defined $token);

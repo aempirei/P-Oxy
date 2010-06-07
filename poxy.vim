@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:		P/Oxy
 " Maintainer:		Christopher Abad <aempirei@gmail.com>
-" Last Change:		2010 Jun 4
+" Last Change:		2010 Jun 7
 " Original Author:	Christopher Abad <aempirei@gmail.com>
 "
 " Remove any old syntax stuff hanging around

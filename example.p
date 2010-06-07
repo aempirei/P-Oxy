@@ -1,3 +1,14 @@
+##
+## The P Programming Language
+##
+## pointless example code 
+##
+## Copyright(c) 2010 by Christopher Abad
+## 20 GOTO 10 | aempirei@gmail.com
+##
+
+print "hello world"
+
 ## all native values are considered nullary functions
 
 integer <- 5

@@ -1,4 +1,11 @@
 #!/usr/bin/perl
+#
+# Lexical Analyzer for The P Programming Language
+#
+# Copyright(c) 2010 by Christopher Abad
+# aempirei@gmail.com
+#
+
 
 use strict;
 use warnings;
@@ -14,7 +21,6 @@ my @tokens;
 
 sub set {
 	my ( $fmt, $type, $token ) = @_;
-	print "type fail $token\n" unless (defined $token);
 	return $type."\t".$token;
 }
 

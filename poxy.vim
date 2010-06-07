@@ -28,22 +28,24 @@ syn match	poxySpecialChar	contained	"\\\([0-9]\+\|o[0-7]\+\|x[0-9a-fA-F]\+\|[\"\
 syn match	poxyRegexpChar	contained	"\\\([0-9]\+\|o[0-7]\+\|x[0-9a-fA-F]\+\|[\"\\'&\\abfnrtvbBdDsSwW]\|^[A-Z^_\[\\\]]\)"
 syn match	poxySpecialChar	contained	"\\\(NUL\|SOH\|STX\|ETX\|EOT\|ENQ\|ACK\|BEL\|BS\|HT\|LF\|VT\|FF\|CR\|SO\|SI\|DLE\|DC1\|DC2\|DC3\|DC4\|NAK\|SYN\|ETB\|CAN\|EM\|SUB\|ESC\|FS\|GS\|RS\|US\|SP\|DEL\)"
 
-syn region	poxyString	start=+"+		skip=+\\\\\|\\"+	end=+"+			contains=poxySpecialChar
-syn region	poxyRegexp	start=+/+		skip=+\\\\\|\\/+	end=+/+			contains=poxyRegexpChar
-syn region	poxySubst	start=+\<s/+	skip=+\\\\\|\\/+	end=+/+me=e-1	contains=poxyRegexpChar
-syn region	poxyLiteral	start=+'+							end=+'+
+syn region	poxyString	start=+"+		skip=+\\\\\|\\"+	end=+"+				contains=poxySpecialChar
+syn region	poxyRegexp	start=+/+		skip=+\\\\\|\\/+	end=+/[ims]*+		contains=poxyRegexpChar
 
-syn match   poxyNumber	"+[0-9]\+\(e[0-9]*\)\?\|\<-\?[0-9]\+\(e[0-9]*\)\?\>\|\<0[xX][0-9a-fA-F]\+\>\|\<0[bB][01]\+\>\|\<0[oO][0-7]\+\>"
+syn region	poxyLiteral start=+'+							end=+'+
+syn match	poxySubst "\<s/\(\\/\|[^/]\)*/\(\\/\|[^/]\)*/[ims]*"				contains=poxyRegexpChar
+
+syn match   poxyNumber	"\(\<\|[+-]\)\(0\|[1-9][[:digit:]]*\|0[dD][[:digit:]]\+\|0[xX][[:xdigit:]]\+\|0[bB][01]\+\|0[oO]\?[0-7]\+\)\>"
 syn match	poxyBoolean	"\<\(true\|false\|null\)\>"
-syn match	poxyFloat "[+-]\?\([[:digit:]]\{1,\}\.[[:digit:]]*\|[[:digit:]]*\.[[:digit:]]\{1,\}\)\(e[0-9]*\)\?\>"
+syn match   poxyFloat1  "\(\<\|[+-]\)\(0\|[1-9][[:digit:]]*\)\.\([[:digit:]]\+\>\)\?"
+syn match   poxyFloat2  "\(\<\|[+-]\)\(0\|[1-9][[:digit:]]*\)\.[[:digit:]]*\([eE][+-]\?\(0\|[1-9][[:digit:]]*\)\?\)\>"
 
 syn match	poxyError "\<\(0[89][^ ]*\)"
 
 syn match poxyConditional		"\<\(if\|then\|else\|elseif\)\>"
-syn match poxyKeyword			"\<\(is\|do\|while\|all\|rescope\)\>"
+syn match poxyKeyword			"\<\(is\|do\|while\|all\|rescope\|set\)\>"
 
 syn match	poxySharpBang	"^#!.*"
-syn match	poxyComment		"--.*"
+syn match	poxyComment		"##.*"
 
 if version >= 508 || !exists("did_poxy_syntax_inits")
   if version < 508
@@ -90,7 +92,11 @@ if version >= 508 || !exists("did_poxy_syntax_inits")
 
   HiLink poxyCharacter		Character
   HiLink poxyNumber			Number
-  HiLink poxyFloat			Float
+  HiLink poxyFloat1			Float
+  HiLink poxyFloat2			Float
+  HiLink poxyFloat3			Float
+  HiLink poxyFloat4 		Float
+  HiLink poxyFloat5			Float
   HiLink poxyBoolean		Boolean
 
   delcommand HiLink

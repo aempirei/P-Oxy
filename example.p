@@ -132,9 +132,9 @@ K <- { x y | x }
 I <- { x | x }
  
 ## extending a list type with a size function is easy
-## just define an autocircumfix operator (two ?'s inbetween operator symbols)
+## just define an autocircumfix operator (. inbetween operator symbols)
 
-List.|??| <- { |
+List.{{.}} <- { |
     sz <- 0
     each (@) (I) { a | sz <- sz + 1 }
     sz
@@ -142,14 +142,16 @@ List.|??| <- { |
 
 ## array-like access is the wrong way to go about things
 ## but if you want to do it, its easy to define
-## a regular circumfix operator for [] will do it
+## a regular circumfix operator for [] will do it (* inbetween operator symbols)
 
-List.[?] <- { k |
+List.[*] <- { k |
     xs <- @
     each (N) { n | n < k } { n | x:xs <- xs }
     x:xs <- xs
     x
 }    
+
+List.<<.>> <- I
 
 ...print ( sprintf "the %dth item of the list is %d\n" 4 list[4] )
 
@@ -157,7 +159,7 @@ List.[?] <- { k |
 
 quicksort <- { xs |
     if xs == $ then $           ## if xs is empty, then return an empty list
-    elseif |xs| == 1 then xs    ## if xs has 1 element then return xs
+    elseif {{xs}} == 1 then xs    ## if xs has 1 element then return xs
     else do { |                 ## otherwise quicksort sub-lists and concatenate
         x:xs <- xs
         left <- all (xs) { lx | lx < x }
@@ -201,11 +203,11 @@ w <- 3:4:5
 
 ## define and calculate the vector norm using the autocircumfix operator |*|
 
-Vector.|*| <- { | sqrt ( sum ( map @ { x | x * x } ) ) }   
+Vector.<<*>> <- { | sqrt ( sum ( map @ { x | x * x } ) ) }   
 
-v_norm <- |v|
+v_norm <- <<v>>
 
-w_norm <- |w|
+w_norm <- <<w>>
 
 ## each special scoping path has both a symbolic and named form
 

@@ -1,12 +1,18 @@
 
 <document> := <command>*
 
-<command> := <assignment> | <rescope> | <link> | <each> | <expr> | <alias>
+<command> := <assignment> | <rescope> | <link> | <each> | <expr> | <nop>
 
-<assignment> := <node> <- <expr>
-<assignment> := <symbol>:<symbol> <- <expr>
+<assignment> := <list_assignment> | <node_assignment>
+
+<node_assignment> := <node> <- <expr>
+
+<list_assignment> := <symbol>:<symbol> <- <expr>
+
 <rescope> := rescope <node>
+
 <link> := <node> -> <node>
+
 <each> := each <expr> <expr> <expr>
 
 <node> := <symbol_node> | <operator_node> | <root>
@@ -30,6 +36,7 @@
 <infix> := <expr> <operator> <expr>
 
 <circumfix> := <half_operator> <param>* <half_terminator>
+
 <prefix> := <function> <param>*
 
 <function> := <symbol_node> | <explicit_operator>
@@ -38,27 +45,58 @@
 
 <free> := ?
 
-<list> := <expr>
-<list> := <list>:<expr>
+<list> := <expr> | <pair>
+
+<pair> := <expr>:<expr>
 
 <lambda> := { <symbol>* | <document> }
 
 <all> := all <expr> <expr>
 
-<do> := do <lambda> <param>*
+<do> := do <lambda> <param>* 
 
-<conditional> := <ifthen>
-<conditional> := <ifthen> else <expr>
+<conditional> := <ifthen> | <ifthenelse>
 
 <ifthen> := if <expr> then <expr> 
 <ifthen> := <ifthen> elseif <expr> then <expr>
 
- {{shit}} + {{head}} + d <<3>> sick ++ [fuck] ++ [[fuck]] ++ {{{balls}}} ++ <[ass]> 
+<ifthenelse> := <ifthen> else <expr>
 
+<value> := <string> | <regexp> | <numeric>
+
+<nop> := <newline> | <terminator>
+
+<newline> := \n
+
+<terminator> := <EOF> | <EOL> | <NUL>
+
+<empty> := 
+
+<operator> := <normal_operator> | <auto_circumfix_operator> | <circumfix_operator>
+
+<auto_circumfix_operator> :=  <half_operator>.<half_terminator>
+
+<circumfix_operator> := <half_operator>*<half_terminator>
+
+<string> := <single_quoted> | <double_quoted> | <unicode_expr>
+
+<unicode_expr> := U+<decimal>
+
+<regexp> := <match_regexp> | <subst_regexp>
+
+<numeric> := <binary> | <octal> | <decimal> | <hexidecimal> | <float>
+
+--
+-- see P/Lexer.pm for the details of these grammar rules
+--
+
+<binary>
+<octal>
+<decimal>
+<hexidecimal>
+<float>
+<normal_operator>
 <half_operator>
 <half_terminator>
-<value>
 <symbol>
-<operator>
-<alias>
-<empty>
+

@@ -35,6 +35,8 @@ my $range = qr/\{(?:$dec,?|$dec,$dec|,$dec)\}/;
 my $codes = qr/[[:alpha:]]|x[[:xdigit:]]{2}|0[0-7]{0,3}|\\|[1-9]\d?/;
 my $sign = qr/(?:[+-]|\b)/;
 my $space = qr/(?:[ \t\r]|\\\n)/;
+my $halfop = qr/(?:<<+|\[+|\{\{+)/;
+my $halfterm = qr/(?:>>+|\]+|\}\}+)/;
 
 #
 # this the the main lexing function, returning the triple : ( type, token, tail )
@@ -149,9 +151,29 @@ sub get_type_token_tail {
 		# boolean
 		( $type, $token ) = ('boolean', $1);
 
+	} elsif($data =~ /\A($halfop\.$halfterm)/ms) {
+
+		# auto circumfix operator
+		( $type, $token ) = ('auto-circumfix-operator', $1);
+
+	} elsif($data =~ /\A($halfop\*$halfterm)/ms) {
+
+		# circumfix operator
+		( $type, $token ) = ('circumfix-operator', $1);
+
+	} elsif($data =~ /\A($halfop)/ms) {
+
+		# half operator
+		( $type, $token ) = ('half-operator', $1);
+
+	} elsif($data =~ /\A($halfterm)/ms) {
+
+		# half terminator
+		( $type, $token ) = ('half-terminator', $1);
+
 	} elsif($data =~ /\A([-^=+\[\]<>?\/\\,?:;*&~|%#~\`\$@!{}]+)/ms) {
 
-		# operator
+		# normal operator
 		( $type, $token ) = ('operator', $1);
 
 	} elsif($data =~ /\A(.*)$/ms) {

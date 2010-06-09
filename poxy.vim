@@ -23,6 +23,7 @@ syn match	poxyParen		"[()]"
 syn match	poxyOperator	"[~:]"
 syn match	poxySpecialNode "[@!$]\|\.\.\."
 syn match	poxyParam		"[?*]"
+syn match	poxyWrap		"\\$"
 
 syn match	poxySpecialChar	contained	"\\\([0-9]\+\|o[0-7]\+\|x[0-9a-fA-F]\+\|[\"\\'&\\abfnrtv]\|^[A-Z^_\[\\\]]\)"
 syn match	poxyRegexpChar	contained	"\\\([0-9]\+\|o[0-7]\+\|x[0-9a-fA-F]\+\|[\"\\'&\\abfnrtvbBdDsSwW]\|^[A-Z^_\[\\\]]\)"
@@ -65,6 +66,7 @@ if version >= 508 || !exists("did_poxy_syntax_inits")
   HiLink poxyOperator		Operator
   HiLink poxyOperators		Operator
   HiLink poxyLambda			PreProc
+  HiLink poxyWrap			PreProc
 
   HiLink poxyConditional	Conditional
   HiLink poxyKeyword		Conditional

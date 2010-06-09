@@ -34,6 +34,7 @@ my $dec = qr/(?:0|[1-9]\d*)/;
 my $range = qr/\{(?:$dec,?|$dec,$dec|,$dec)\}/;
 my $codes = qr/[[:alpha:]]|x[[:xdigit:]]{2}|0[0-7]{0,3}|\\|[1-9]\d?/;
 my $sign = qr/(?:[+-]|\b)/;
+my $space = qr/(?:[ \t\r]|\\\n)/;
 
 #
 # this the the main lexing function, returning the triple : ( type, token, tail )
@@ -46,18 +47,26 @@ sub get_type_token_tail {
 
 	my $data = shift;
 
-	# whitespace is meaningless -- consume it
+	# non-newline whitespace is meaningless -- consume it
 
-	$data =~ s/\A(\s+)//;
+	$data =~ s/\A$space+//ms;
 
 	# match the next token. these regular expressions are sorted with longest
 	# running tokens first in the case of tokens that are potential prefixes
 	# such as the case of the symbol token 's' being the prefix to the
 	# substitution token s/// for example.
 
-	if($data =~ /\A(##[^\n]*)$/ms) {
+	if($data =~ /\A(\n(?:$space|\n)*)/ms) {
 
-		# comment blobs are just parsed out in whole
+		# newline -- newline is 'interesting' because its used as a parameter
+		# termination code along with ) and } and keywords and generally anything
+		# that can't be interpreted as a parameter.
+		# newlines can be forced as whitespace by escaping them like so: \
+		( $type, $token ) = ('newline', '');
+
+	} elsif($data =~ /\A(##[^\n]*)$/ms) {
+
+		# comment blobs are just parsed out in whole but not including their newline
 		( $type, $token ) = ('comment', $1);
 
 	} elsif($data =~ /\A(\/(?:\\(?:\/|[*?|.+^\$\[\]{}]|$codes)|$range|[^\/])*\/(?:[ims]*\b)?)/ms) {

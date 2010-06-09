@@ -9,6 +9,10 @@
 
 print "hello world"
 
+    \
+    \
+    \
+
 ## all native values are considered nullary functions
 
 integer <- 5
@@ -20,6 +24,10 @@ float <- 3.1415e0
 math <- (4 + 77) - 2 * 3 + 1 + -1 + (1 + (2 + 3))
 string <- "hello" + 'bob'
 match <- "shit" ~ /hi/
+
+wrap_line <- 1 + \
+             2 + \
+             3
 
 ## a list of values demonstrating the various numeric formats
 
@@ -111,10 +119,11 @@ n <- 0
 
 while n < 10 { | list <- list : if n > 5 then n else n + n }
 
-## breaking a pair up is straight forward
-## allowing arbitrary pairs to build trees though make it difficult
-## to facilitate head/tail splitting operation on lists
-## this may force ':' to act as list concatenation instead of pairing
+## breaking a list up is straight forward. this expression is a good example of
+## the fact that <- works differently than a standard operator in that the l-value
+## is clearly not a normal list expression in that xs cannot be replaced by an
+## aribrary expression nor is 'x:xs' a node and thus <- is not an adjacency
+## the bnf here is not <expr>:<expr> <- <expr> but <symbol>:<symbol> <- <expr>
 
 x:xs <- list
 

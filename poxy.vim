@@ -14,7 +14,6 @@ endif
 syn match	poxyOperators	"[-^=+\[\]<>?/\\,:;*&~|%#@!]\{1,\}"
 syn match	poxyLambda		"[{|}]"
 syn match	poxyBars		"\[\+\|\]\+\|{{\+\|}}\+\|<<\+\|>>\+"
-" contains=poxyParam,poxyNode,poxyType,poxySpecialNode
 syn match	poxyNode		"\<[a-z_][[:alnum:]_]*!*\>[!?]*"
 syn match	poxyType		"\<[A-Z][a-zA-Z]*\>"
 syn match	poxyAssign		"<-"

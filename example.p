@@ -115,7 +115,7 @@ replaced! <- string ~ subst
 
 list <- $
 
-each N { n | n < 10 } { n | list <- list : if n > 5 then n else n + n }
+each (N) { n | n < 10 } { n | list <- list : if n > 5 then n else n + n }
 
 ## breaking a list up is straight forward. this expression is a good example of
 ## the fact that <- works differently than a standard operator in that the l-value
@@ -136,7 +136,7 @@ I <- { x | x }
 
 List.|??| <- { |
     sz <- 0
-    each @ I { a | sz <- sz + 1 }
+    each (@) (I) { a | sz <- sz + 1 }
     sz
 }    
 
@@ -146,7 +146,7 @@ List.|??| <- { |
 
 List.[?] <- { k |
     xs <- @
-    each N { n | n < k } { n | x:xs <- xs }
+    each (N) { n | n < k } { n | x:xs <- xs }
     x:xs <- xs
     x
 }    
@@ -160,8 +160,8 @@ quicksort <- { xs |
     elseif |xs| == 1 then xs    ## if xs has 1 element then return xs
     else do { |                 ## otherwise quicksort sub-lists and concatenate
         x:xs <- xs
-        left <- all xs { lx | lx < x }
-        right <- all xs { rx | lx >= x }
+        left <- all (xs) { lx | lx < x }
+        right <- all (xs) { rx | lx >= x }
         ( quicksort left ) : x : ( quicksort right )
     }
 }    
@@ -169,7 +169,7 @@ quicksort <- { xs |
 ## quantifiers when applied to types with total orderings will stop after the first false expression evaluation
 ## when possible, types will be enumerated in their natural order, enumeration is otherwise lazy
 
-each N { n | n < 10 } { n | ...print ( sprintf "number %d\n" n ) }
+each (N) { n | n < 10 } { n | ...print ( sprintf "number %d\n" n ) }
 
 ## although not a native part of the language, post-increment is easy to implement
 
@@ -241,7 +241,7 @@ rescope ...
 
 ## back-tick means treat string as path
 
-each 'child1':'child2':'child3' I { s |
+each 'child1':'child2':'child3' (I) { s |
     rescope parent.`s
     ...print ( sprintf "%s from %s\n" @ parent )
 }

@@ -9,25 +9,30 @@
 <link> := <node> -> <node>
 <each> := each <expr> <expr> <expr>
 
-<node> := <path><symbol>
-<node> := <path><operator>
-<node> := <root>
+<node> := <symbol_node> | <operator_node> | <root>
 
-<path> := <empty>
-<path> := <root>
-<path> := <path><symbol>.
+<symbol_node> := <path><symbol>
+
+<path> := <empty> | <explicit_path>
+
+<explicit_path> := <root> | <symbol_node>.
 
 <root> := ...
 
+<operator_node> := <path><operator>
+
+<explicit_operator> := <explicit_path><operator>
+
 <expr> := (<expr>) | <call> | <value> | <lambda> | <conditional> | <all> | <list> | <do>
 
-<call> := <infix> | <circumfix> | <prefix> | <function>
+<call> := <infix> | <circumfix> | <prefix>
 
 <infix> := <expr> <operator> <expr>
 
 <circumfix> := <half_operator> <param>* <half_terminator>
-<prefix> := <operator> <param>*
-<function> := <node> <param>*
+<prefix> := <function> <param>*
+
+<function> := <symbol_node> | <explicit_operator>
 
 <param> := <expr> | <free>
 
@@ -40,7 +45,7 @@
 
 <all> := all <expr> <expr>
 
-<do> := do <lambda>
+<do> := do <lambda> <param>*
 
 <conditional> := <ifthen>
 <conditional> := <ifthen> else <expr>
@@ -48,9 +53,12 @@
 <ifthen> := if <expr> then <expr> 
 <ifthen> := <ifthen> elseif <expr> then <expr>
 
+ {{shit}} + {{head}} + d <<3>> sick ++ [fuck] ++ [[fuck]] ++ {{{balls}}} ++ <[ass]> 
+
 <half_operator>
 <half_terminator>
 <value>
 <symbol>
 <operator>
 <alias>
+<empty>

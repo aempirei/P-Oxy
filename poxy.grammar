@@ -1,0 +1,56 @@
+
+<document> := <command>*
+
+<command> := <assignment> | <rescope> | <link> | <each> | <expr> | <alias>
+
+<assignment> := <node> <- <expr>
+<assignment> := <symbol>:<symbol> <- <expr>
+<rescope> := rescope <node>
+<link> := <node> -> <node>
+<each> := each <expr> <expr> <expr>
+
+<node> := <path><symbol>
+<node> := <path><operator>
+<node> := <root>
+
+<path> := <empty>
+<path> := <root>
+<path> := <path><symbol>.
+
+<root> := ...
+
+<expr> := (<expr>) | <call> | <value> | <lambda> | <conditional> | <all> | <list> | <do>
+
+<call> := <infix> | <circumfix> | <prefix> | <function>
+
+<infix> := <expr> <operator> <expr>
+
+<circumfix> := <half_operator> <param>* <half_terminator>
+<prefix> := <operator> <param>*
+<function> := <node> <param>*
+
+<param> := <expr> | <free>
+
+<free> := ?
+
+<list> := <expr>
+<list> := <list>:<expr>
+
+<lambda> := { <symbol>* | <document> }
+
+<all> := all <expr> <expr>
+
+<do> := do <lambda>
+
+<conditional> := <ifthen>
+<conditional> := <ifthen> else <expr>
+
+<ifthen> := if <expr> then <expr> 
+<ifthen> := <ifthen> elseif <expr> then <expr>
+
+<half_operator>
+<half_terminator>
+<value>
+<symbol>
+<operator>
+<alias>

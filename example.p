@@ -80,11 +80,11 @@ string <- string ++ 'well, well, well...'
 ## this has the effect of being a nullary function on the root node
 ## ...clear or just clear when scope is ... which will blank out the root node
 
-clear -> String.clear
+@ -> String.clear
 
 ## some weird operators
 
-...last -> @
+...last -> @ ## FIXME: this shouldn't be link but alias, which needs a new operator
 
 rescope Integer
 

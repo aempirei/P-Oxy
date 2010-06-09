@@ -18,7 +18,7 @@ my @tokens;
 
 while(length($data) > 0) {
 	my ( $type, $token, $tail ) = P::Lexer::get_type_token_tail($data);
-	print "parsed token : $type -- $token\n";
+	printf("%15s %-15s\n", $type, $token);
 	push @tokens, [ $type, $token ];
 	$data = $tail;
 }

@@ -66,11 +66,12 @@ rescope a.path.to
 
 ## define string concatenation : a ++ b
 
-String.++ <- { s | @ + s }
+String.++ <- { s | @ <- @ + s }
 
 ## concatenate a string onto ...string
 
-string <- string ++ 'well, well, well...'
+string ++ 'well, well, well...'
+string ++ U+534D
 
 ## define string.clear
 
@@ -159,7 +160,7 @@ List.<<.>> <- I
 
 quicksort <- { xs |
     if xs == $ then $           ## if xs is empty, then return an empty list
-    elseif {{xs}} == 1 then xs    ## if xs has 1 element then return xs
+    elif {{xs}} == 1 then xs    ## if xs has 1 element then return xs
     else do { |                 ## otherwise quicksort sub-lists and concatenate
         x:xs <- xs
         left <- all (xs) { lx | lx < x }

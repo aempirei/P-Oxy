@@ -13,7 +13,8 @@ endif
 
 syn match	poxyOperators	"[-^=+\[\]<>?/\\,:;*&~|%#@!]\{1,\}"
 syn match	poxyLambda		"[{|}]"
-syn match	poxyBars		"|\+[^ ]*|\+" contains=poxyParam,poxyNode,poxyType,poxySpecialNode
+syn match	poxyBars		"\[\+\|\]\+\|{{\+\|}}\+\|<<\+\|>>\+"
+" contains=poxyParam,poxyNode,poxyType,poxySpecialNode
 syn match	poxyNode		"\<[a-z_][[:alnum:]_]*!*\>[!?]*"
 syn match	poxyType		"\<[A-Z][a-zA-Z]*\>"
 syn match	poxyAssign		"<-"
@@ -36,14 +37,14 @@ syn region	poxyLiteral start=+'+							end=+'+
 syn match	poxySubst "\<s/\(\\/\|[^/]\)*/\(\\/\|[^/]\)*/[ims]*"				contains=poxyRegexpChar
 
 syn match   poxyNumber	"\(\<\|[+-]\)\(0\|[1-9][[:digit:]]*\|0[dD][[:digit:]]\+\|0[xX][[:xdigit:]]\+\|0[bB][01]\+\|0[oO]\?[0-7]\+\)\>"
-syn match	poxyBoolean	"\<\(true\|false\|null\)\>"
+syn match	poxyBoolean	"\<\(true\|false\|null\|U+[[:xdigit:]][[:xdigit:]][[:xdigit:]][[:xdigit:]]\)\>"
 syn match   poxyFloat1  "\(\<\|[+-]\)\(0\|[1-9][[:digit:]]*\)\.\([[:digit:]]\+\>\)\?"
 syn match   poxyFloat2  "\(\<\|[+-]\)\(0\|[1-9][[:digit:]]*\)\.[[:digit:]]*\([eE][+-]\?\(0\|[1-9][[:digit:]]*\)\?\)\>"
 
 syn match	poxyError "\<\(0[89][^ ]*\)"
 
-syn match poxyConditional		"\<\(if\|then\|else\|elseif\)\>"
-syn match poxyKeyword			"\<\(is\|do\|each\|all\|rescope\|set\)\>"
+syn match poxyConditional		"\<\(if\|then\|else\|elif\)\>"
+syn match poxyKeyword			"\<\(is\|do\|each\|all\|rescope\)\>"
 
 syn match	poxySharpBang	"^#!.*"
 syn match	poxyComment		"##.*"

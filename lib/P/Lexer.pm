@@ -73,18 +73,32 @@ sub get_type_token_tail {
 
 	} elsif($data =~ /\A(\/(?:\\(?:\/|[*?|.+^\$\[\]{}]|$codes)|$range|[^\/])*\/(?:[ims]*\b)?)/ms) {
 	
-		# match
-		( $type, $token ) = ('match', $1);
+		# match-regexp
+		( $type, $token ) = ('match-regexp', $1);
 
 	} elsif($data =~ /\A(\bs\/(?:\\(?:\/|[*?|.+^\$\[\]{}]|$codes)|$range|[^\/])*\/(?:\\(?:\/|$codes)|[^\/])*\/(?:[imsg]*\b)?)/ms) {
 
-		# subst
-		( $type, $token ) = ('subst', $1);
+		# subst-regexp
+		( $type, $token ) = ('subst-regexp', $1);
+
+	} elsif($data =~ /\A(U\+[[:xdigit:]]{4}\b)/ms) {
+
+		# unicode-expr
+		( $type, $token ) = ('unicode-expr', $1);
 
 	} elsif($data =~ /\A([[:alpha:]_][[:alnum:]_]*[!?]*)/ms) {
 
-		# symbol
-		( $type, $token ) = ('symbol', $1);
+		# symbols
+
+		my @keywords = qw(if then else elif is do each all rescope);
+
+		$token = $1;
+
+		if(grep(/^\Q$token\E$/, @keywords)) {
+			$type = $token.'-op';
+		} else {
+			$type = 'symbol';
+		}
 
 	} elsif($data =~ /\A(\.\.\.)/ms) {
 
@@ -98,13 +112,13 @@ sub get_type_token_tail {
 
 	} elsif($data =~ /\A('[^']*')/ms) {
 
-		# literal
-		( $type, $token ) = ('literal', $1);
+		# single-quoted
+		( $type, $token ) = ('single-quoted', $1);
 
 	} elsif($data =~ /\A("(?:\\(?:"|$codes)|[^"])*")/ms) {
 
-		#quote
-		( $type, $token ) = ('quote', $1);
+		# double-quoted
+		( $type, $token ) = ('double-quoted', $1);
 
 	} elsif($data =~ /\A([()])/ms) {
 
@@ -173,8 +187,40 @@ sub get_type_token_tail {
 
 	} elsif($data =~ /\A([-^=+\[\]<>?\/\\,?:;*&~|%#~\`\$@!{}]+)/ms) {
 
-		# normal operator
-		( $type, $token ) = ('operator', $1);
+		# operators
+
+		my %operators = (
+			'{'  => 'left-bracket',
+			'}'  => 'right-bracket',
+			'<-' => 'left-arrow',
+			'->' => 'right-arrow',
+			'?'  => 'free',
+			':'  => 'list-op'
+		);
+
+		$token = $1;
+
+		if(exists $operators{$token}) {
+			$type = $operators{$token};
+		} else {
+			$type = 'operator';
+		}
+
+		if($token eq '{') {
+			$type = 'left-bracket';
+		} elsif($token eq '}') {
+			$type = 'right-bracket';
+		} elsif($token eq '<-') {
+			$type = 'left-arrow';
+		} elsif($token eq '->') {
+			$type = 'right-arrow';
+		} elsif($token eq '?') {
+			$type = 'free';
+		} elsif($token eq ':') {
+			$type = 'list-op';
+		} else {
+			$type = 'normal-operator';
+		}
 
 	} elsif($data =~ /\A(.*)$/ms) {
 

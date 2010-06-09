@@ -5,29 +5,27 @@
 
 <assignment> := <list_assignment> | <node_assignment>
 
-<node_assignment> := <node> <- <expr>
+<node_assignment> := <node> <left-arrow> <expr>
 
-<list_assignment> := <symbol>:<symbol> <- <expr>
+<list_assignment> := <symbol> <list-op> <symbol> <left-arrow> <expr>
 
-<rescope> := rescope <node>
+<rescope> := <rescope-op> <node>
 
-<link> := <node> -> <node>
+<link> := <node> <right-arrow> <node>
 
-<each> := each <expr> <expr> <expr>
+<each> := <each-op> <expr> <expr> <expr>
 
 <node> := <symbol_node> | <operator_node> | <root>
 
-<symbol_node> := <path><symbol>
+<symbol_node> := <path> <symbol>
 
 <path> := <empty> | <explicit_path>
 
-<explicit_path> := <root> | <symbol_node>.
+<explicit_path> := <root> | <symbol_node> <dot>
 
-<root> := ...
+<operator_node> := <path> <operator>
 
-<operator_node> := <path><operator>
-
-<explicit_operator> := <explicit_path><operator>
+<explicit_operator> := <explicit_path> <operator>
 
 <expr> := (<expr>) | <call> | <value> | <lambda> | <conditional> | <all> | <list> | <do>
 
@@ -35,7 +33,7 @@
 
 <infix> := <expr> <operator> <expr>
 
-<circumfix> := <half_operator> <param>* <half_terminator>
+<circumfix> := <half-operator> <param>* <half-terminator>
 
 <prefix> := <function> <param>*
 
@@ -43,46 +41,34 @@
 
 <param> := <expr> | <free>
 
-<free> := ?
-
 <list> := <expr> | <pair>
 
-<pair> := <expr>:<expr>
+<pair> := <expr> <list-op> <expr>
 
-<lambda> := { <symbol>* | <document> }
+<lambda> := <left-bracket> <symbol>* <operator:|> <document> <right-bracket>
 
-<all> := all <expr> <expr>
+<all> := <all-op> <expr> <expr>
 
-<do> := do <lambda> <param>* 
+<do> := <do-op> <lambda> <param>* 
 
 <conditional> := <ifthen> | <ifthenelse>
 
-<ifthen> := if <expr> then <expr> 
-<ifthen> := <ifthen> elseif <expr> then <expr>
+<ifthen> := <if-op> <expr> <then-op> <expr> 
+<ifthen> := <ifthen> <elseif-op> <expr> <then-op> <expr>
 
-<ifthenelse> := <ifthen> else <expr>
+<ifthenelse> := <ifthen> <else-op> <expr>
 
 <value> := <string> | <regexp> | <numeric>
 
 <nop> := <newline> | <terminator>
 
-<newline> := \n
-
 <terminator> := <EOF> | <EOL> | <NUL>
 
-<empty> := 
+<operator> := <normal-operator> | <auto-circumfix-operator> | <circumfix-operator>
 
-<operator> := <normal_operator> | <auto_circumfix_operator> | <circumfix_operator>
+<string> := <single-quoted> | <double-quoted> | <unicode-expr>
 
-<auto_circumfix_operator> :=  <half_operator>.<half_terminator>
-
-<circumfix_operator> := <half_operator>*<half_terminator>
-
-<string> := <single_quoted> | <double_quoted> | <unicode_expr>
-
-<unicode_expr> := U+<decimal>
-
-<regexp> := <match_regexp> | <subst_regexp>
+<regexp> := <match-regexp> | <subst-regexp>
 
 <numeric> := <binary> | <octal> | <decimal> | <hexidecimal> | <float>
 
@@ -90,13 +76,41 @@
 -- see P/Lexer.pm for the details of these grammar rules
 --
 
+<all-op>
+<auto-circumfix-operator>
 <binary>
-<octal>
+<circumfix-operator>
+<comment>
 <decimal>
-<hexidecimal>
+<do-op>
+<dot>
+<double-quoted>
+<each-op>
+<elif-op>
+<else-op>
 <float>
-<normal_operator>
-<half_operator>
-<half_terminator>
+<free>
+<half-operator>
+<half-terminator>
+<hexidecimal>
+<if-op>
+<is-op>
+<left-arrow>
+<left-bracket>
+<list-op>
+<match-regexp>
+<newline>
+<normal-operator>
+<nothing>
+<octal>
+<paren>
+<rescope-op>
+<right-arrow>
+<right-bracket>
+<root>
+<single-quoted>
+<subst-regexp>
 <symbol>
-
+<then-op>
+<unicode-expr>
+<empty>

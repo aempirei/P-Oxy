@@ -27,7 +27,7 @@
 
 <explicit_operator> := <explicit_path> <operator>
 
-<expr> := (<expr>) | <call> | <value> | <lambda> | <conditional> | <all> | <list> | <do>
+<expr> := <left-paren> <expr> <right-paren> | <call> | <value> | <lambda> | <conditional> | <all> | <list> | <do>
 
 <call> := <infix> | <circumfix> | <prefix>
 

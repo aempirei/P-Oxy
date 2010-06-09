@@ -120,10 +120,13 @@ sub get_type_token_tail {
 		# double-quoted
 		( $type, $token ) = ('double-quoted', $1);
 
-	} elsif($data =~ /\A([()])/ms) {
+	} elsif($data =~ /\A(\()/ms) {
 
-		# paren
-		( $type, $token ) = ('paren', $1);
+		( $type, $token ) = ('left-paren', $1);
+
+	} elsif($data =~ /\A(\))/ms) {
+
+		( $type, $token ) = ('right-paren', $1);
 
 	} elsif($data =~ /\A($sign$dec\.\d*[eE][+-]?$dec)\b/ms) {
 

@@ -115,9 +115,7 @@ replaced! <- string ~ subst
 
 list <- $
 
-n <- 0
-
-while n < 10 { | list <- list : if n > 5 then n else n + n }
+each N { n | n < 10 } { n | list <- list : if n > 5 then n else n + n }
 
 ## breaking a list up is straight forward. this expression is a good example of
 ## the fact that <- works differently than a standard operator in that the l-value
@@ -138,7 +136,7 @@ I <- { x | x }
 
 List.|??| <- { |
     sz <- 0
-    all @ I { | sz <- sz + 1 }
+    each @ I { a | sz <- sz + 1 }
     sz
 }    
 
@@ -146,9 +144,9 @@ List.|??| <- { |
 ## but if you want to do it, its easy to define
 ## a regular circumfix operator for [] will do it
 
-List.[?] <- { n |
+List.[?] <- { k |
     xs <- @
-    all N { m | m < n } { x:xs <- xs }
+    each N { n | n < k } { n | x:xs <- xs }
     x:xs <- xs
     x
 }    
@@ -168,25 +166,30 @@ quicksort <- { xs |
     }
 }    
 
-## various ways to iterate over a range of numbers
 ## quantifiers when applied to types with total orderings will stop after the first false expression evaluation
 ## when possible, types will be enumerated in their natural order, enumeration is otherwise lazy
 
-all N { n | n < 10 } { n | ...print ( sprintf "number %d\n" n ) }
-
-## the standard increment and loop while is also straightforward
-
-n <- 0
-
-while n < 10 { | n <- n + 1 }
+each N { n | n < 10 } { n | ...print ( sprintf "number %d\n" n ) }
 
 ## although not a native part of the language, post-increment is easy to implement
 
 Number.++ <- { |
         n <- @ 
         @ <- @ + 1 
-        n
+        n   ## the value of a lambda is the value of the last evaluation
 }
+
+## immedate vs. delayed evaluation of lambda expressions
+
+...value <- 50
+
+immediate <- do { | ...value }
+later <- { | ...value }
+
+...value <- ...value + 10
+
+...print ( sprintf "immediate=%d\n" imediate )
+...print ( sprintf "later=%d\n" later )
 
 ## build a small list of 3 items in two different ways
 
@@ -238,7 +241,7 @@ rescope ...
 
 ## back-tick means treat string as path
 
-all 'child1':'child2':'child3' I { s |
+each 'child1':'child2':'child3' I { s |
     rescope parent.`s
     ...print ( sprintf "%s from %s\n" @ parent )
 }

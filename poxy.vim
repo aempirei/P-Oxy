@@ -43,7 +43,7 @@ syn match   poxyFloat2  "\(\<\|[+-]\)\(0\|[1-9][[:digit:]]*\)\.[[:digit:]]*\([eE
 syn match	poxyError "\<\(0[89][^ ]*\)"
 
 syn match poxyConditional		"\<\(if\|then\|else\|elseif\)\>"
-syn match poxyKeyword			"\<\(is\|do\|while\|all\|rescope\|set\)\>"
+syn match poxyKeyword			"\<\(is\|do\|each\|all\|rescope\|set\)\>"
 
 syn match	poxySharpBang	"^#!.*"
 syn match	poxyComment		"##.*"

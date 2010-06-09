@@ -17,6 +17,10 @@ hex <- 0xFFFF
 oct <- 0777
 float <- 3.1415e0
 
+math <- (4 + 77) - 2 * 3 + 1 + -1 + (1 + (2 + 3))
+string <- "hello" + 'bob'
+match <- "shit" ~ /hi/
+
 ## a list of values demonstrating the various numeric formats
 
 dec <- 666 : 0d666 : -0d666 : +0d666 : 0d0 : 0

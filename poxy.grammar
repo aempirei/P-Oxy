@@ -72,6 +72,8 @@
 
 <numeric> := <binary> | <octal> | <decimal> | <hexidecimal> | <float>
 
+==EOF==
+
 --
 -- see P/Lexer.pm for the details of these grammar rules
 --

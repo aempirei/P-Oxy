@@ -42,6 +42,21 @@ my $halfterm = qr/(?:>>+|\]+|\}\}+)/;
 # this the the main lexing function, returning the triple : ( type, token, tail )
 #
 
+sub get_tokens {
+
+	my $data = shift;
+	
+	my @tokens;
+
+	while(length($data) > 0) {
+	    my ( $type, $token, $tail ) = get_type_token_tail($data);
+	    push @tokens, [ $type, $token ];
+		$data = $tail;
+	}
+
+	return @tokens;
+}
+
 sub get_type_token_tail {
 
 	my $type;

@@ -14,11 +14,9 @@ use P::Lexer;
 
 my $data = join('', <STDIN>);
 
-my @tokens;
+my @tokens = P::Lexer::get_tokens($data);
 
-while(length($data) > 0) {
-	my ( $type, $token, $tail ) = P::Lexer::get_type_token_tail($data);
+foreach my $tt (@tokens) {
+	my ($type, $token) = @$tt;
 	printf("%15s %-15s\n", $type, $token);
-	push @tokens, [ $type, $token ];
-	$data = $tail;
 }

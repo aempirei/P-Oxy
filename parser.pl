@@ -28,15 +28,24 @@ $fh->open('<'.$grammar_file);
 my $program_data = join('', <STDIN>);
 my $grammar_data = join('', <$fh>);
 
-my %tree;
+#
+# parse the grammar file and tokenize the program data
+#
+
 my %grammar = P::Parser::get_grammar($grammar_data);
 my @tokens = P::Lexer::get_tokens($program_data);
 
+my %tree;
+
+#
+# just dump out the intermediate data
+#
+
 foreach my $rule (keys(%grammar)) {
-	printf("%s := %s\n", $rule, join(' | ', @{$grammar{$rule}}));
+	printf("%s := %s\n", $rule, join(' | ', keys(%{$grammar{$rule}})));
 }
 
 foreach my $tt (@tokens) {
 	my ($type, $token) = @$tt;
-	printf("%15s %-15s\n", $type, $token);
+	printf("%15s %-15s %s\n", $type, $token, 0);
 }

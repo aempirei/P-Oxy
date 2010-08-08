@@ -45,7 +45,7 @@ sub get_grammar {
 	        my $key = $1;
 	        my $tail = $2;
 
-			my @rules = split(/\s*\|\s*/, $tail);
+			my @rules = split(/\s+\|\s+/, $tail);
 
 			#
 			# make sure the key doesnt exist but if it does just add the extra rules to the entry
@@ -57,8 +57,9 @@ sub get_grammar {
 			# parse out each subrule via '|' and then assign an array of each potential rule
 			#
 
-			foreach my $rule (split(/\s*\|\s*/, $tail)) {
-				$grammar{$key}->{$rule} = 1;
+			foreach my $rule (@rules) {
+				# $grammar{$key}->{$rule} = 1;
+				$grammar{$rule}->{$key} = 1;
 			}
 	    }
 	}

@@ -60,7 +60,7 @@
 
 <value> := <string> | <regexp> | <numeric>
 
-<nop> := <newline> | <terminator>
+<nop> := <newline> | <terminator> | <comment>
 
 <terminator> := <EOF> | <EOL> | <NUL>
 

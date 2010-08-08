@@ -55,10 +55,10 @@ sub get_grammar {
 
 			#
 			# parse out each subrule via '|' and then assign an array of each potential rule
+			# this grammar tree starts from the smaller rules as keys to the larger rules as values
 			#
 
 			foreach my $rule (@rules) {
-				# $grammar{$key}->{$rule} = 1;
 				$grammar{$rule}->{$key} = 1;
 			}
 	    }

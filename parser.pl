@@ -45,7 +45,30 @@ foreach my $rule (keys(%grammar)) {
 	printf("%s := %s\n", $rule, join(' | ', keys(%{$grammar{$rule}})));
 }
 
+my @expr;
+
 foreach my $tt (@tokens) {
 	my ($type, $token) = @$tt;
 	printf("%15s %-15s %s\n", $type, $token, 0);
+
+	# append the current token to the current expression
+	# look up the expression in the grammar model, if the expression exists
+	# push the expression chain down, and substitute the expression
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

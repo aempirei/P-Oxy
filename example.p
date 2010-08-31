@@ -70,6 +70,15 @@ rescope a.path.to
 
 ...print ...a.value
 
+## everything derives from the Lamda constructor but
+## a lot of native literals have implicit construction
+
+y <- Lambda { x | 2 * x }
+
+z <- { x | 2 * x }
+
+θ <- z
+
 ## define string concatenation : a ++ b
 
 String.++ <- { s | @ <- @ + s }
@@ -118,11 +127,14 @@ subst <- s/wel+,?\n\r\x33"\"\/\\/fell\n/imsi
 replaced! <- string ~ subst
 
 ## start an empty list ($), initialize n to zero and then build a list of values
-## also, pairing with the empty list is the identity function ( x <- $:x ) == x
+## also, pairing with the empty list is the identity function $:x == $:(List x) == List x
 
 list <- $
 
 each (N) while { n | n < 10 } { n | list <- list : if n > 5 then n else n + n }
+
+xs <- List 1:2:3
+xs <- List 1:(List 2:(List 3:(List $)))
 
 ## breaking a list up is straight forward. this expression is a good example of
 ## the fact that <- works differently than a standard operator in that the l-value

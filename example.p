@@ -227,11 +227,21 @@ map_slick <- { f xs | foldl $ (concat ? (f ?)) xs }
 ## the concern i have is that since the function is an adjacent node to the accumulated value, delaying its association until the call
 ## might pose problems for compilation or the interpreter
 
+## are all in theory lists (except R shouldnt be a list) the enumeration method of Q should be
+## cantor diagonalization omitting reducible fractions. the elements should be some form of number
+## but probably there should be a Fraction class.
+## these are also in theory constructors for List derivative types
+## on another note, I is the identity constructor function (constructs in full the type+value passed to it)
+
+numbers <- Z:Q:N
+
+ℕ <- N ## lol
+
 Σ <- { xs | foldl 0 (+) xs }
 
 Π <- { xs | foldr 1 (*) xs }
 
-sum <- Σ all (N) while { n | n < 5 }
+sum <- Σ all (ℕ) while { n | n < 5 }
 
 prod <- Π all (N) while { n | n < 5 }
 
@@ -270,17 +280,37 @@ later <- { | ...value }
 ...print ( sprintf "immediate=%d\n" imediate )
 ...print ( sprintf "later=%d\n" later )
 
-## build a small list of 3 items in two different ways
+## define and calculate the vector norm using the autocircumfix operator <<.>>
 
-v <- 3
+## FIXME: how does Vector inheirit from List
+## if Constructor symbols are all of type Type then copying one should in theory work if
+## the associated node links are copied over also
+
+Vector <- List
+
+Vector.<<.>> <- { | sqrt (sum (map { x | x * x } @)) }
+
+## FIXME: how should these defer? what if you wanna copy a nullary lambda without executing it or linking it?
+## should auto-circumfix operators be assigned to unary lambdas instead? should there be a postpone keyword?
+## the original idea was that if the correct number of parameters to a lamda is passed at any given moment, it
+## is evaulated, otherwise it is curryed, unless a literal lambda is expressed in which it is postponed.
+
+List.<<.>> -> Vector.<<.>>
+List.<<.>> <- Vector.<<.>>
+List.<<.>> <- wait Vector.<<.>>
+
+## build a small list of 3 items in two different ways as Vectors
+
+## FIXME: how does one instantiate a class (Vector in this case)
+## maybe class name symbols are constructors
+
+v <- Vector 3
 v <- v:4
 v <- v:5
 
-w <- 3:4:5
+w <- Vector 3:4:5
 
-## define and calculate the vector norm using the autocircumfix operator |*|
-
-Vector.<<*>> <- { | sqrt ( sum ( map @ { x | x * x } ) ) }   
+## figure the norms
 
 v_norm <- <<v>>
 
@@ -324,3 +354,5 @@ each 'child1':'child2':'child3' (I) { s |
     rescope parent.`s
     ...print ( sprintf "%s from %s\n" @ parent )
 }
+
+## FIXME: how does one get a list of adjacent nodes?

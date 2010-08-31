@@ -106,7 +106,7 @@ sub get_type_token_tail {
 
 		# symbols
 
-		my @keywords = qw(if then else elif is do each all while rescope);
+		my @keywords = qw(if then else elif is do wait each all while rescope);
 
 		$token = $1;
 
@@ -227,29 +227,13 @@ sub get_type_token_tail {
 		if(exists $operators{$token}) {
 			$type = $operators{$token};
 		} else {
-			$type = 'operator';
-		}
-
-		if($token eq '{') {
-			$type = 'left-bracket';
-		} elsif($token eq '}') {
-			$type = 'right-bracket';
-		} elsif($token eq '<-') {
-			$type = 'left-arrow';
-		} elsif($token eq '->') {
-			$type = 'right-arrow';
-		} elsif($token eq '?') {
-			$type = 'free';
-		} elsif($token eq ':') {
-			$type = 'list-op';
-		} else {
 			$type = 'normal-operator';
 		}
 
 	} elsif($data =~ /\A([\x{2200}-\x{22ff}])/ms) {
 
 		# single math operator
-		( $type, $token ) = ('operator', $1);
+		( $type, $token ) = ('normal-operator', $1);
 
 	} elsif($data =~ /\A(.*)$/ms) {
 

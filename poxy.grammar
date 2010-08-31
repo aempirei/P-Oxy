@@ -28,7 +28,7 @@
 
 <call> := <infix> | <circumfix> | <prefix>
 
-<infix> := <expr> <operator> <expr>
+<infix> := <expr> <normal-operator> <expr>
 
 <circumfix> := <half-operator> <param>* <half-terminator>
 
@@ -36,9 +36,7 @@
 
 <param> := <expr> | <free>
 
-<list> := <expr> | <pair>
-
-<pair> := <expr> <list-op> <expr>
+<list> := <expr> <list-op> <expr>
 
 <lambda> := <left-bracket> <symbol>* <operator:|> <document> <right-bracket>
 

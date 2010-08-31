@@ -50,19 +50,19 @@ sub get_grammar {
 	        my $tail = $2;
 
 			my @rules = split(/\s+\|\s+/, $tail);
-
-			#
-			# make sure the key doesnt exist but if it does just add the extra rules to the entry
-			#
-
-			$grammar{$key} = {} unless(defined $grammar{$key});
-
 			#
 			# parse out each subrule via '|' and then assign an array of each potential rule
 			# this grammar tree starts from the smaller rules as keys to the larger rules as values
 			#
 
 			foreach my $rule (@rules) {
+
+				#
+				# make sure the key doesnt exist but if it does just add the extra rules to the entry
+				#
+
+				$grammar{$rule} = {} unless(defined $grammar{$rule});
+
 				$grammar{$rule}->{$key} = 1;
 			}
 	    }

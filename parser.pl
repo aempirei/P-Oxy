@@ -42,21 +42,24 @@ my %tree;
 #
 
 foreach my $rule (keys(%grammar)) {
-printf("%s := %s\n", $rule, join(' | ', keys(%{$grammar{$rule}})));
+	printf("%s := %s\n", $rule, join(' | ', keys(%{$grammar{$rule}})));
 }
 
 my @expr;
 
 foreach my $tt (@tokens) {
 
-	my ($type, $token) = @$tt;
+my ($type, $token) = @$tt;
+
 	# printf("%15s %-15s %s\n", $type, $token, 0);
 
-# for each token, look up all of the grammar matches based on the current sequence
+	# until primary sequence is <document>
+		# while tokens are left
+			# consume tokens until complete prefix match is found
+			# if no prefix match is found then output node to queue
+			# otherwise output substitution to queue
 
-	# for each token find each grammar match.
-	# a grammar match rule is a regular expression of the sequence of tokens either of static or dynamic length but regular in form.
-	# append each grammar match to that grammar sequence
-	# if a gramar sequence is terminated in correct form, perform parent substitution and unshift the sub onto the head of tokens
-	# if the document has ended then if we are at the root node, successful parse, otherwise parse failed
+		# if queue and primary are same then error
+	
+		# swap queue for primary sequence and rewind
 }

@@ -10,6 +10,7 @@ package P::Lexer;
 use strict;
 use warnings;
 
+use Encode;
 
 BEGIN {
 	use Exporter ();
@@ -44,13 +45,13 @@ my $halfterm = qr/(?:>>+|\]+|\}\}+)/;
 
 sub get_tokens {
 
-	my $data = shift;
-	
+	my $data = decode_utf8(shift);
+
 	my @tokens;
 
 	while(length($data) > 0) {
 	    my ( $type, $token, $tail ) = get_type_token_tail($data);
-	    push @tokens, [ $type, $token ];
+	    push @tokens, [ $type, encode_utf8($token) ];
 		$data = $tail;
 	}
 
@@ -105,7 +106,7 @@ sub get_type_token_tail {
 
 		# symbols
 
-		my @keywords = qw(if then else elif is do each all rescope);
+		my @keywords = qw(if then else elif is do each all while rescope);
 
 		$token = $1;
 
@@ -114,6 +115,11 @@ sub get_type_token_tail {
 		} else {
 			$type = 'symbol';
 		}
+
+	} elsif($data =~ /\A([\x{300}-\x{3ff}])/ms) {
+
+		# single greek letter
+		( $type, $token ) = ('symbol', $1);
 
 	} elsif($data =~ /\A(\.\.\.)/ms) {
 
@@ -239,6 +245,11 @@ sub get_type_token_tail {
 		} else {
 			$type = 'normal-operator';
 		}
+
+	} elsif($data =~ /\A([\x{2200}-\x{22ff}])/ms) {
+
+		# single math operator
+		( $type, $token ) = ('operator', $1);
 
 	} elsif($data =~ /\A(.*)$/ms) {
 

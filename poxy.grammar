@@ -14,6 +14,7 @@
 <link> := <node> <right-arrow> <node>
 
 <each> := <each-op> <expr> <expr> <expr>
+<each> := <each-op> <expr> <while-op> <expr> <expr>
 
 <node> := <symbol_node> | <operator_node> | <root>
 
@@ -37,7 +38,7 @@
 
 <prefix> := <function> <param>*
 
-<function> := <symbol_node> | <explicit_operator>
+<function> := <symbol_node> | <explicit_operator> | <operator>
 
 <param> := <expr> | <free>
 
@@ -48,6 +49,7 @@
 <lambda> := <left-bracket> <symbol>* <operator:|> <document> <right-bracket>
 
 <all> := <all-op> <expr> <expr>
+<all> := <all-op> <expr> <while-op> <expr>
 
 <do> := <do-op> <lambda> <param>* 
 

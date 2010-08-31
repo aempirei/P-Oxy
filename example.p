@@ -38,6 +38,12 @@ bin <- 0b0 : 0b1 : -0B1 : +0B1
 float <- 0. : 0.0 : 10.0 : 10. : -666. : +666. : +666.666
 float <- 0.e0 : 0.0e-1 : 10.0e+2 : 10.e+0 : -666.e11 : +666.e+10 : +666.666e-0
 
+## unicode support!
+## single greek letters (0300-03ff) are considered symbols
+## single mathematical operators (2200-22ff) are considered infix operators
+
+π <- 3.14159265 ## PI
+
 ## assign a string to a root node (string)
 
 ...string <- '\033[1 this is a literal
@@ -89,7 +95,7 @@ string ++ U+534D
 
 rescope Integer
 
-` <- I
+` <- I ## this might be illegal because this in another context is a kind of de-ref of path strings
 , <- I
 ~ <- I
 
@@ -116,7 +122,7 @@ replaced! <- string ~ subst
 
 list <- $
 
-each (N) { n | n < 10 } { n | list <- list : if n > 5 then n else n + n }
+each (N) while { n | n < 10 } { n | list <- list : if n > 5 then n else n + n }
 
 ## breaking a list up is straight forward. this expression is a good example of
 ## the fact that <- works differently than a standard operator in that the l-value
@@ -147,7 +153,7 @@ List.{{.}} <- { |
 
 List.[*] <- { k |
     xs <- @
-    each (N) { n | n < k } { n | x:xs <- xs }
+    each (N) while { n | n < k } { n | x:xs <- xs }
     x:xs <- xs
     x
 }    
@@ -165,22 +171,92 @@ quicksort <- { xs |
         x:xs <- xs
         left <- all (xs) { lx | lx < x }
         right <- all (xs) { rx | lx >= x }
-        ( quicksort left ) : x : ( quicksort right )
+        (quicksort left):x:(quicksort right)
     }
 }    
+
+## fold left and fold right reduction functions
+
+foldl <- { z f xs |
+    if xs == $ then z
+    else do {
+        x:xs <- xs
+        foldl (f z x) f xs
+    }
+}
+
+foldr <- { z f xs |
+    if xs == $ then z
+    else do { |
+        x:xs <- xs
+        f x (foldr z f xs)
+    }
+}
+
+## function composition with the circle operator
+
+∘ <- { g f | { x | g (f x) } }
+
+## since list building isnt a true lambda we have to make one
+
+concat <- { xs x | xs:x }
+
+## basic recursive definition of map
+
+map <- { f xs |
+    if xs == $ then $
+    else do { |
+        x:xs <- xs
+        (f x):(map f xs)
+    }
+}
+
+## basic iterative definition of map
+
+map_each <- { f xs |
+    ys <- $
+    each (xs) (I) { x | ys <- ys:(f x) }
+    ys
+}
+
+## the slick definition of map with the composition of concatenation and f
+
+map_slick <- { f xs | foldl $ (concat ? (f ?)) xs }
+
+## if not all parameters to an expression are filled out then the lambda expression itself is passed instead of the evaluation (i hope)
+## the concern i have is that since the function is an adjacent node to the accumulated value, delaying its association until the call
+## might pose problems for compilation or the interpreter
+
+Σ <- { xs | foldl 0 (+) xs }
+
+Π <- { xs | foldr 1 (*) xs }
+
+sum <- Σ all (N) while { n | n < 5 }
+
+prod <- Π all (N) while { n | n < 5 }
 
 ## quantifiers when applied to types with total orderings will stop after the first false expression evaluation
 ## when possible, types will be enumerated in their natural order, enumeration is otherwise lazy
 
-each (N) { n | n < 10 } { n | ...print ( sprintf "number %d\n" n ) }
+each (N) while { n | n < 10 } { n | ...print ( sprintf "number %d\n" n ) }
 
 ## although not a native part of the language, post-increment is easy to implement
+## this one issue with using it is that operators are considered infix unless the explicit path is referenced and
+## the parameter set is terminated correctly so it would have to be called very un-ambiguously
 
 Number.++ <- { |
         n <- @ 
         @ <- @ + 1 
         n   ## the value of a lambda is the value of the last evaluation
 }
+
+x <- 666
+
+## newlines and close parens terminate a parameter list
+
+x.++
+
+y <- (x.++) + 10
 
 ## immedate vs. delayed evaluation of lambda expressions
 
@@ -242,7 +318,7 @@ child3.parent -> @
 
 rescope ...
 
-## back-tick means treat string as path
+## back-tick means treat string as path FIXME: i dont think this is actually dealt with
 
 each 'child1':'child2':'child3' (I) { s |
     rescope parent.`s

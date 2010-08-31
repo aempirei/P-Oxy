@@ -38,37 +38,25 @@ my @tokens = P::Lexer::get_tokens($program_data);
 my %tree;
 
 #
-# just dump out the intermediate data
+# dump out the parsed grammar spec.
 #
 
 foreach my $rule (keys(%grammar)) {
-	printf("%s := %s\n", $rule, join(' | ', keys(%{$grammar{$rule}})));
+printf("%s := %s\n", $rule, join(' | ', keys(%{$grammar{$rule}})));
 }
 
 my @expr;
 
 foreach my $tt (@tokens) {
+
 	my ($type, $token) = @$tt;
-	printf("%15s %-15s %s\n", $type, $token, 0);
+	# printf("%15s %-15s %s\n", $type, $token, 0);
 
-	# append the current token to the current expression
-	# look up the expression in the grammar model, if the expression exists
-	# push the expression chain down, and substitute the expression
+# for each token, look up all of the grammar matches based on the current sequence
+
+	# for each token find each grammar match.
+	# a grammar match rule is a regular expression of the sequence of tokens either of static or dynamic length but regular in form.
+	# append each grammar match to that grammar sequence
+	# if a gramar sequence is terminated in correct form, perform parent substitution and unshift the sub onto the head of tokens
+	# if the document has ended then if we are at the root node, successful parse, otherwise parse failed
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -54,10 +54,11 @@ my ($type, $token) = @$tt;
 	# printf("%15s %-15s %s\n", $type, $token, 0);
 
 	# until primary sequence is <document>
-		# while tokens are left
+
+		# while no substitution occurs
 			# consume tokens until complete prefix match is found
-			# if no prefix match is found then output node to queue
-			# otherwise output substitution to queue
+			# if no prefix match is found then output node to queue and step forward in primary
+			# otherwise unget substitution to primary and break
 
 		# if queue and primary are same then error
 	

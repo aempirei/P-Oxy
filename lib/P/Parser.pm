@@ -39,8 +39,12 @@ sub get_grammar {
 	foreach my $line (split(/\n/, $data)) {
 
     	last if($line =~ /^==EOF==$/);
+		
+		if($line =~ /^(\s*)--/) {
 
-	    if($line =~ /(\S+)\s*:=\s*(.*?)\s*$/) {
+			# skip comments
+
+	    } elsif($line =~ /(\S+)\s*:=\s*(.*?)\s*$/) {
 
 	        my $key = $1;
 	        my $tail = $2;

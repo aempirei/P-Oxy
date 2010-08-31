@@ -18,15 +18,11 @@
 
 <node> := <symbol_node> | <operator_node> | <root>
 
-<symbol_node> := <path> <symbol>
+<symbol_node> := <path> <symbol> | <symbol>
 
-<path> := <empty> | <explicit_path>
+<path> := <root> | <symbol_node> <dot>
 
-<explicit_path> := <root> | <symbol_node> <dot>
-
-<operator_node> := <path> <operator>
-
-<explicit_operator> := <explicit_path> <operator>
+<operator_node> := <path> <operator> | <operator>
 
 <expr> := <left-paren> <expr> <right-paren> | <call> | <value> | <lambda> | <conditional> | <all> | <list> | <do>
 
@@ -36,9 +32,7 @@
 
 <circumfix> := <half-operator> <param>* <half-terminator>
 
-<prefix> := <function> <param>*
-
-<function> := <symbol_node> | <explicit_operator> | <operator>
+<prefix> := <node> <param>*
 
 <param> := <expr> | <free>
 
@@ -117,4 +111,3 @@
 <symbol>
 <then-op>
 <unicode-expr>
-<empty>

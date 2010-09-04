@@ -219,7 +219,8 @@ sub get_type_token_tail {
 			'<-' => 'left-arrow',
 			'->' => 'right-arrow',
 			'?'  => 'free',
-			':'  => 'list-op'
+			':'  => 'list-op',
+			';'  => 'semicolon'
 		);
 
 		$token = $1;

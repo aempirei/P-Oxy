@@ -44,6 +44,11 @@ float <- 0.e0 : 0.0e-1 : 10.0e+2 : 10.e+0 : -666.e11 : +666.e+10 : +666.666e-0
 
 π <- 3.14159265 ## PI
 
+## i hate to allow this but its just an outcome of the fact that i dont
+## feel like writing a LALR parser and thus need terminators
+
+a <- 1 ; b <- 2 ; c <- 3 ## lame
+
 ## assign a string to a root node (string)
 
 ...string <- '\033[1 this is a literal

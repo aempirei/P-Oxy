@@ -1,7 +1,9 @@
 
-<document> := <command>*
+<document> := <full_command>*
 
-<command> := <assignment> | <rescope> | <link> | <each> | <expr> | <nop>
+<full_command> := <command> <terminator>
+
+<command> := <assignment> | <rescope> | <link> | <each> | <expr>
 
 <assignment> := <list_assignment> | <node_assignment>
 
@@ -40,7 +42,10 @@
 
 <list> := <param> <list-op> <param>
 
+-- this syntax differentiation is lame because it will require the document to end with a terminator
+
 <lambda> := <left-bracket> <symbol>* <operator:|> <document> <right-bracket>
+<lambda> := <left-bracket> <symbol>* <operator:|> <expr> <right-bracket>
 
 <all> := <all-op> <expr> <expr>
 <all> := <all-op> <expr> <while-op> <expr>
@@ -56,9 +61,11 @@
 
 <value> := <string> | <regexp> | <numeric>
 
-<nop> := <newline> | <terminator> | <comment>
+<terminator> := <NOP>+
 
-<terminator> := <EOF> | <EOL> | <NUL>
+<NOP> := <EOF> | <EOL> | <NUL>
+
+<EOL> := <newline> | <semicolon> | <comment>
 
 <operator> := <normal-operator> | <auto-circumfix-operator> | <circumfix-operator>
 

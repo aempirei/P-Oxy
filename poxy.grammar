@@ -24,11 +24,13 @@
 
 <operator_node> := <path> <operator> | <operator>
 
-<expr> := <left-paren> <expr> <right-paren> | <call> | <value> | <lambda> | <conditional> | <all> | <list> | <do>
+<expr> := <left-paren> <expr> <right-paren> | <call> | <value> | <lambda> | <conditional> | <all> | <list> | <do> | <wait>
 
 <call> := <infix> | <circumfix> | <prefix>
 
-<infix> := <expr> <normal-operator> <expr>
+<wait> := <wait-op> <call>
+
+<infix> := <param> <normal-operator> <param>
 
 <circumfix> := <half-operator> <param>* <half-terminator>
 
@@ -36,7 +38,7 @@
 
 <param> := <expr> | <free>
 
-<list> := <expr> <list-op> <expr>
+<list> := <param> <list-op> <param>
 
 <lambda> := <left-bracket> <symbol>* <operator:|> <document> <right-bracket>
 

@@ -64,21 +64,40 @@ sub print_document {
 
 }
 
-sub get_tree {
+sub get_all_substitutions {
+
 	my ( $document, $grammar ) = @_;
+
+	return ();
 }
 
-print_grammar($grammar);
-print_document($tokens);
+# each node is of the form [ type, [ nodes... ] OR token ]
+# each document is of the form  [ nodes... ]
+# $tokens pretty much is a sequence of nodes already
 
-my %tree = get_tree($tokens, $grammar);
+sub get_tree {
+	my ( $document, $grammar ) = @_;
 
-	# then return
+	my $first_node = $document->[0];
 
-# for each possible substitution
-	# attempt substitution
-	# if recurse is 'document'
-		# then return
+	my ( $first_type, $first_token ) = @$first_node;
 
-# return error
+	if(scalar(@$document) == 1 and $first_type eq 'document') {
 
+		return $document;
+
+	} else {
+		
+		foreach my $subst_document (get_all_substitutions($document, $grammar)) {
+
+			my $tree = get_tree($subst_document, $grammar);
+
+			return $tree if(defined $tree);
+		}
+	}
+}
+
+# print_grammar($grammar);
+# print_document($tokens);
+
+my $tree = get_tree($tokens, $grammar);

@@ -32,30 +32,46 @@ my $grammar_data = join('', <$fh>);
 # parse the grammar file and tokenize the program data
 #
 
-my @grammar = P::Parser::get_grammar($grammar_data);
-my @tokens = P::Lexer::get_tokens($program_data);
-
-my %tree;
+my $grammar = P::Parser::get_grammar($grammar_data);
+my $tokens = P::Lexer::get_tokens($program_data);
 
 #
 # dump out the parsed grammar spec.
 #
 
-my ( $rules, $prefixes ) = @grammar;
+sub print_grammar {
 
-foreach my $prefix (@$prefixes) {
-	my $rule = join(' ', @$prefix);
-	die "rule not found: $rule" unless(exists $rules->{$rule});
-	printf("%s := %s\n", $rule, join(' | ', keys(%{$rules->{$rule}})));
+	my $grammar = shift;
+
+	my ( $rules, $prefixes ) = @$grammar;
+
+	foreach my $prefix (@$prefixes) {
+		my $rule = join(' ', @$prefix);
+		die "rule not found: $rule" unless(exists $rules->{$rule});
+		printf("%s := %s\n", $rule, join(' | ', keys(%{$rules->{$rule}})));
+	}
 }
 
-my $document = [@tokens];
+sub print_document {
 
-foreach my $node (@$document) {
-	my ( $type, $token ) = @$node;
+	my $document = shift;
 
-	print "<$type:$token>\n";
+	foreach my $node (@$document) {
+		my ( $type, $token ) = @$node;
+
+		print "<$type:$token>\n";
+	}
+
 }
+
+sub get_tree {
+	my ( $document, $grammar ) = @_;
+}
+
+print_grammar($grammar);
+print_document($tokens);
+
+my %tree = get_tree($tokens, $grammar);
 
 	# then return
 

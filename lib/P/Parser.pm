@@ -58,9 +58,9 @@ sub get_grammar {
 
 	my $data = shift;
 
-	my %rules;
+	my $rules = {};
 
-	my @prefixes;
+	my $prefixes = [];
 
 	foreach my $line (split(/\n/, $data)) {
 
@@ -91,20 +91,20 @@ sub get_grammar {
 				# make sure the key doesnt exist but if it does just add the extra rules to the entry
 				#
 
-				$rules{$normal_rule} = {} unless(defined $rules{$normal_rule});
+				$rules->{$normal_rule} = {} unless(defined $rules->{$normal_rule});
 
-				$rules{$normal_rule}->{$key} = rule_to_prefix($key);
+				$rules->{$normal_rule}->{$key} = rule_to_prefix($key);
 
 				#
 				# convert the rule into the actual type prefix
 				#
 
-				push @prefixes, $prefix;
+				push @$prefixes, $prefix;
 			}
 	    }
 	}
 
-	return ( {%rules}, [@prefixes] );
+	return [ $rules, $prefixes ];
 }
 
 END { }

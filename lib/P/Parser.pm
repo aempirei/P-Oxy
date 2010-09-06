@@ -5,11 +5,13 @@
 # aempirei@gmail.com
 #
 
+use lib '..';
+
 package P::Parser;
 
 use strict;
 use warnings;
-
+use P::Grammar;
 
 BEGIN {
 	use Exporter ();
@@ -29,15 +31,47 @@ our @EXPORT_OK;
 # apply $prefix from $grammar->[0]->{join('', @$prefix)} to $document->[$offset]
 
 sub get_substitution {
-	my ( $document, $Offset, $prefix, $grammar ) = @_;
+
+	my ( $document, $offset, $prefix, $grammar ) = @_;
+
+	my $length = scalar(@$prefix);
+
+	die "prefix extends past end of document" if($offset + $length > scalar(@$document));
+
+	my $sub_document = [ @$document[$offset..($offset+$length-1)] ];
+
+	my ( $rules, $prefixes ) = @$grammar;
+
+	my @new_documents;
+
+	my $rule = $rules->{P::Grammar::prefix_to_key($prefix)};
+
+	foreach my $node (keys(%$rule)) {
+		my $new_document = [ @$document[0..$offset,($offset+$length)..$#$document] ];
+		$new_document->[$offset] = [ $node, [ @$document[$offset..($offset+$length-1)] ] ];
+
+		push @new_documents, $new_document;
+	}
+
+	return @new_documents;
 }
 
 # check if $prefix matches document at $document->[$offset]
 
 sub prefix_matches {
+
 	my ( $document, $offset, $prefix ) = @_;
 
-	return 0;
+	my $length = scalar(@$prefix);
+
+	return 0 if($offset + $length > scalar(@$document));
+
+	my $sub_document = [ map { $_->[0] } @$document[$offset..($offset+$length-1)] ];
+
+	my $s = P::Grammar::prefix_to_key($prefix);
+	my $t = P::Grammar::prefix_to_key($sub_document);
+
+	return ($s eq $t);
 }
 
 # get every simple substitution that exists for the given document
@@ -48,11 +82,12 @@ sub get_all_substitutions {
 
 	my $subs = [];
 
-	push @$subs, [ [ 'document', $document ] ];
+	# push @$subs, [ [ 'document', $document ] ];
 
 	foreach my $prefix (@{$grammar->[1]}) {
+
 		foreach my $offset (0..$#$document) {
-			if(prefix_matches($document, $offset, $prefix, $grammar)) {
+			if(prefix_matches($document, $offset, $prefix)) {
 				push @$subs, get_substitution($document, $offset, $prefix, $grammar);
 			}
 		}
@@ -73,8 +108,6 @@ sub get_tree {
 
 	my ( $first_type, $first_token ) = @$first_node;
 
-	print STDERR sprintf("document size: %s first node type: %s\n", scalar(@$document), $first_type);
-
 	if(scalar(@$document) == 1 and $first_type eq 'document') {
 
 		return $document;
@@ -85,11 +118,15 @@ sub get_tree {
 
 		foreach my $subst_document (@$all_substitutions) {
 
+			print join(' ', map { $_->[0] } @$subst_document)."\n";
+
 			my $tree = get_tree($subst_document, $grammar);
 
 			return $tree if(defined $tree);
 		}
 	}
+
+	return;
 }
 
 END { }

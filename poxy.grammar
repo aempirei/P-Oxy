@@ -1,7 +1,8 @@
+<document> := <full_commands>
 
-<document> := <full_command> *
+<full_commands> := <full_commands> <full_command> | <full_command>
 
-<full_command> := <command> <terminator>
+<full_command> := <command> <terminator> | <terminator>
 
 <command> := <assignment> | <rescope> | <link> | <each> | <expr>
 
@@ -34,23 +35,30 @@
 
 <infix> := <param> <normal-operator> <param>
 
-<circumfix> := <half-operator> <param> * <half-terminator>
+<circumfix> := <half-operator> <params> <half-terminator> | <half-operator> <half-terminator>
 
-<prefix> := <node> <param> *
+<prefix> := <node> <params> | <node>
 
 <param> := <expr> | <free>
+
+<params> := <params> <param> | <param>
 
 <list> := <param> <list-op> <param>
 
 -- this syntax differentiation is lame because it will require the document to end with a terminator
 
-<lambda> := <left-bracket> <symbol> * <normal-operator:|> <document> <right-bracket>
-<lambda> := <left-bracket> <symbol> * <normal-operator:|> <expr> <right-bracket>
+<lambda> := <left-bracket> <symbols> <normal-operator:|> <document> <right-bracket>
+<lambda> := <left-bracket> <symbols> <normal-operator:|> <expr> <right-bracket>
 
+<lambda> := <left-bracket> <normal-operator:|> <document> <right-bracket>
+<lambda> := <left-bracket> <normal-operator:|> <expr> <right-bracket>
+
+<symbols> := <symbols> <symbol> | <symbol>
+ 
 <all> := <all-op> <expr> <expr>
 <all> := <all-op> <expr> <while-op> <expr>
 
-<do> := <do-op> <lambda> <param> * 
+<do> := <do-op> <lambda> <params> | <do-op> <lambda>
 
 <conditional> := <ifthen> | <ifthenelse>
 
@@ -61,7 +69,7 @@
 
 <value> := <string> | <regexp> | <numeric>
 
-<terminator> := <NOP> +
+<terminator> := <NOP>
 
 <NOP> := <EOF> | <EOL> | <NUL>
 

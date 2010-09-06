@@ -50,9 +50,7 @@ sub print_document {
 }
 
 sub document_to_string {
-
 	my $tree = shift;
-
 	return join('', map { sprintf("<%s>%s</%s>", $_->[0], ref($_->[1]) eq 'ARRAY' ? document_to_string($_->[1]) : 1 ? '' : $_->[1], $_->[0]) } @$tree);
 }
 

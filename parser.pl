@@ -12,8 +12,8 @@ use strict;
 use warnings;
 use P::Lexer;
 use P::Parser;
-
 use IO::File;
+use HTML::Entities;
 
 my $grammar_file = 'poxy.grammar';
 
@@ -68,12 +68,17 @@ sub get_all_substitutions {
 
 	my ( $document, $grammar ) = @_;
 
-	return ();
+	my $subs = [];
+
+	push @$subs, [ [ 'document', $document ] ];
+
+	return $subs;
 }
 
 # each node is of the form [ type, [ nodes... ] OR token ]
 # each document is of the form  [ nodes... ]
 # $tokens pretty much is a sequence of nodes already
+# the minimal tree doument would look something like [ [ 'document' , [ ] ] ]
 
 sub get_tree {
 	my ( $document, $grammar ) = @_;
@@ -82,15 +87,17 @@ sub get_tree {
 
 	my ( $first_type, $first_token ) = @$first_node;
 
+	print STDERR sprintf("document size: %s first node type: %s\n", scalar(@$document), $first_type);
+
 	if(scalar(@$document) == 1 and $first_type eq 'document') {
 
 		return $document;
 
 	} else {
 
-		return ['document', ['comment', '## magical']];
-		
-		foreach my $subst_document (get_all_substitutions($document, $grammar)) {
+		my $all_substitutions = get_all_substitutions($document, $grammar);
+
+		foreach my $subst_document (@$all_substitutions) {
 
 			my $tree = get_tree($subst_document, $grammar);
 
@@ -103,7 +110,7 @@ sub document_to_string {
 
 	my $tree = shift;
 
-	return join('', map { sprintf("<%s>%s</%s>", $_->[0], ref($_->[1]) eq 'ARRAY' ? document_to_string($_->[1]) : $_->[1], $_->[0]) } @$tree);
+	return join('', map { sprintf("<%s>%s</%s>", $_->[0], ref($_->[1]) eq 'ARRAY' ? document_to_string($_->[1]) : 1 ? '' : $_->[1], $_->[0]) } @$tree);
 }
 
 # print_grammar($grammar);
@@ -111,4 +118,4 @@ sub document_to_string {
 
 my $tree = get_tree($tokens, $grammar);
 
-print document_to_string($tokens)."\n";
+print '<?xml version="1.0"?><source>'.document_to_string($tree)."</source>\n";

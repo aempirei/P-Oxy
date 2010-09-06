@@ -85,7 +85,6 @@ sub get_all_substitutions {
 	# push @$subs, [ [ 'document', $document ] ];
 
 	foreach my $prefix (@{$grammar->[1]}) {
-
 		foreach my $offset (0..$#$document) {
 			if(prefix_matches($document, $offset, $prefix)) {
 				push @$subs, get_substitution($document, $offset, $prefix, $grammar);

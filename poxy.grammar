@@ -1,6 +1,4 @@
-<document> := <full_commands>
-
-<full_commands> := <full_commands> <full_command> | <full_command>
+<document> := <full_command> <document> | <full_command>
 
 <full_command> := <command> <terminator> | <terminator>
 

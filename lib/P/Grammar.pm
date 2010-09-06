@@ -1,5 +1,5 @@
 #
-# Grammar for The P Programming Language
+# Grammar Parser for The P Programming Language
 #
 # Copyright(c) 2010 by Christopher Abad
 # aempirei@gmail.com

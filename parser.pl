@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# Grammar Parser for The P Programming Language
+# Parser Tester for The P Programming Language
 #
 # Copyright(c) 2010 by Christopher Abad
 # aempirei@gmail.com

@@ -114,7 +114,17 @@ sub get_grammar {
 
 				$prefixes{$normal_rule} = $prefix;
 			}
-	    }
+
+	    } elsif($line =~ /^\s*$/) {
+
+			# blank lines are ok
+
+	    } else {
+
+			# otherwise this grammar file is invalid
+
+			die "unparsable grammar line: $line";
+		}
 	}
 
 	return [ $rules, [ values(%prefixes) ] ];

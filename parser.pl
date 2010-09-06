@@ -29,15 +29,11 @@ my $grammar_fh = IO::File::new;
 $grammar_fh->open('<'.$grammar_filename) or die "could not open grammar file $grammar_filename";
 $program_fh->open('<'.$program_filename) or die "could not open program file $program_filename";
 
-#
-# one grammar rule per line (but some grammar rules are combined via '|' (logical OR)
-#
-
 my $program_data = join('', <$program_fh>);
 my $grammar_data = join('', <$grammar_fh>);
 
 #
-# parse the grammar file and tokenize the program data
+# parse the grammar file, tokenize the program data and build the CST
 #
 
 my $grammar = P::Grammar::get_grammar($grammar_data);
@@ -45,21 +41,8 @@ my $tokens = P::Lexer::get_tokens($program_data);
 my $tree = P::Parser::get_tree($tokens, $grammar);
 
 #
-# dump out the parsed grammar spec.
+# dump the parsed CST
 #
-
-sub print_grammar {
-
-	my $grammar = shift;
-
-	my ( $rules, $prefixes ) = @$grammar;
-
-	foreach my $prefix (@$prefixes) {
-		my $rule = P::Grammar::prefix_to_key($prefix);
-		die "rule not found: $rule" unless(exists $rules->{$rule});
-		printf("%s := %s\n", $rule, join(' | ', keys(%{$rules->{$rule}})));
-	}
-}
 
 sub print_document {
 	my $document = shift;
@@ -73,5 +56,4 @@ sub document_to_string {
 	return join('', map { sprintf("<%s>%s</%s>", $_->[0], ref($_->[1]) eq 'ARRAY' ? document_to_string($_->[1]) : 1 ? '' : $_->[1], $_->[0]) } @$tree);
 }
 
-print_grammar($grammar);
 print_document($tree);

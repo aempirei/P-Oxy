@@ -14,20 +14,27 @@ use P::Lexer;
 use P::Grammar;
 use P::Parser;
 use IO::File;
-use HTML::Entities;
+use Getopt::Long;
 
-my $grammar_file = 'poxy.grammar';
+if(scalar(@ARGV) != 2) {
+	print STDERR "\nusage: $0 grammar program\n\n";
+	exit;
+}
 
-my $fh = IO::File::new;
+my ( $grammar_filename, $program_filename ) = @ARGV;
 
-$fh->open('<'.$grammar_file);
+my $program_fh = IO::File::new;
+my $grammar_fh = IO::File::new;
+
+$grammar_fh->open('<'.$grammar_filename) or die "could not open grammar file $grammar_filename";
+$program_fh->open('<'.$program_filename) or die "could not open program file $program_filename";
 
 #
 # one grammar rule per line (but some grammar rules are combined via '|' (logical OR)
 #
 
-my $program_data = join('', <STDIN>);
-my $grammar_data = join('', <$fh>);
+my $program_data = join('', <$program_fh>);
+my $grammar_data = join('', <$grammar_fh>);
 
 #
 # parse the grammar file and tokenize the program data
@@ -56,7 +63,7 @@ sub print_grammar {
 
 sub print_document {
 	my $document = shift;
-	print '<?xml version="1.0"?><source>'.document_to_string($document)."</source>\n";
+	print '<?xml version="1.0"?><program>'.document_to_string($document)."</program>\n";
 }
 
 sub document_to_string {

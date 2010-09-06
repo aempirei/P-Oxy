@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# Lexical Analyzer for The P Programming Language
+# Lexer Tester for The P Programming Language
 #
 # Copyright(c) 2010 by Christopher Abad
 # aempirei@gmail.com

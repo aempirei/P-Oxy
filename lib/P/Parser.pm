@@ -26,85 +26,70 @@ BEGIN {
 
 our @EXPORT_OK;
 
-#
-# convert a text grammar rule to a type prefix which is just a prefix sequence of type strings
-#
+# apply $prefix from $grammar->[0]->{join('', @$prefix)} to $document->[$offset]
 
-sub rule_to_prefix {
-
-	my $rule = shift;
-	my $prefix = [];
-	my $left = $rule;
-
-	while($left =~ /\A(<[^>]+>|[+*])\s*/) {
-
-		# there are exactly 3 kinds of prefix nodes:
-		# a normal type string and a 0 or more star and a 1 or more star
-
-		push @$prefix, $1;
-		$left = $';
-	}
-
-	die 'unparsable grammar rule: '.$left if($left ne '');
-
-	return $prefix;
+sub get_substitution {
+	my ( $document, $Offset, $prefix, $grammar ) = @_;
 }
 
-#
-# one grammar rule per line (but some grammar rules are combined via '|' (logical OR)
-#
+# check if $prefix matches document at $document->[$offset]
 
-sub get_grammar {
+sub prefix_matches {
+	my ( $document, $offset, $prefix ) = @_;
 
-	my $data = shift;
+	return 0;
+}
 
-	my $rules = {};
+# get every simple substitution that exists for the given document
 
-	my $prefixes = [];
+sub get_all_substitutions {
 
-	foreach my $line (split(/\n/, $data)) {
+	my ( $document, $grammar ) = @_;
 
-    	last if($line =~ /^==EOF==$/);
-		
-		if($line =~ /^(\s*)--/) {
+	my $subs = [];
 
-			# skip comments
+	push @$subs, [ [ 'document', $document ] ];
 
-	    } elsif($line =~ /(\S+)\s*:=\s*(.*?)\s*$/) {
-
-	        my $key = $1;
-	        my $tail = $2;
-
-			my @rules_list = split(/\s+\|\s+/, $tail);
-			#
-			# parse out each subrule via '|' and then assign an array of each potential rule
-			# this grammar tree starts from the smaller rules as keys to the larger rules as values
-			#
-
-			foreach my $rule (@rules_list) {
-
-				my $prefix = rule_to_prefix($rule);
-
-				my $normal_rule = join(' ', @$prefix);
-
-				#
-				# make sure the key doesnt exist but if it does just add the extra rules to the entry
-				#
-
-				$rules->{$normal_rule} = {} unless(defined $rules->{$normal_rule});
-
-				$rules->{$normal_rule}->{$key} = rule_to_prefix($key);
-
-				#
-				# convert the rule into the actual type prefix
-				#
-
-				push @$prefixes, $prefix;
+	foreach my $prefix (@{$grammar->[1]}) {
+		foreach my $offset (0..$#$document) {
+			if(prefix_matches($document, $offset, $prefix, $grammar)) {
+				push @$subs, get_substitution($document, $offset, $prefix, $grammar);
 			}
-	    }
+		}
 	}
 
-	return [ $rules, $prefixes ];
+	return $subs;
+}
+
+# each node is of the form [ type, [ nodes... ] OR token ]
+# each document is of the form  [ nodes... ]
+# $tokens pretty much is a sequence of nodes already
+# the minimal tree doument would look something like [ [ 'document' , [ ] ] ]
+
+sub get_tree {
+	my ( $document, $grammar ) = @_;
+
+	my $first_node = $document->[0];
+
+	my ( $first_type, $first_token ) = @$first_node;
+
+	print STDERR sprintf("document size: %s first node type: %s\n", scalar(@$document), $first_type);
+
+	if(scalar(@$document) == 1 and $first_type eq 'document') {
+
+		return $document;
+
+	} else {
+
+		my $all_substitutions = get_all_substitutions($document, $grammar);
+
+		foreach my $subst_document (@$all_substitutions) {
+
+			my $tree = get_tree($subst_document, $grammar);
+
+			return $tree if(defined $tree);
+		}
+	}
 }
 
 END { }

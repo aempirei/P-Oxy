@@ -87,6 +87,8 @@ sub get_tree {
 		return $document;
 
 	} else {
+
+		return ['document', ['comment', '## magical']];
 		
 		foreach my $subst_document (get_all_substitutions($document, $grammar)) {
 
@@ -97,7 +99,16 @@ sub get_tree {
 	}
 }
 
+sub document_to_string {
+
+	my $tree = shift;
+
+	return join('', map { sprintf("<%s>%s</%s>", $_->[0], ref($_->[1]) eq 'ARRAY' ? document_to_string($_->[1]) : $_->[1], $_->[0]) } @$tree);
+}
+
 # print_grammar($grammar);
 # print_document($tokens);
 
 my $tree = get_tree($tokens, $grammar);
+
+print document_to_string($tokens)."\n";

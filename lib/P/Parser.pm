@@ -30,6 +30,10 @@ our @EXPORT_OK;
 
 # apply $prefix from $grammar->[0]->{join('', @$prefix)} to $document->[$offset]
 
+my %prune;
+
+my @prune_stack;
+
 sub get_substitution {
 
 	my ( $document, $offset, $prefix, $grammar ) = @_;
@@ -46,11 +50,21 @@ sub get_substitution {
 
 	my $rule = $rules->{P::Grammar::prefix_to_key($prefix)};
 
-	foreach my $node (keys(%$rule)) {
-		my $new_document = [ @$document[0..$offset,($offset+$length)..$#$document] ];
-		$new_document->[$offset] = [ $node, [ @$document[$offset..($offset+$length-1)] ] ];
+	foreach my $node_type (sort { $rule->{$a} <=> $rule->{$b} } keys(%$rule)) {
 
-		push @new_documents, $new_document;
+		my $new_document = [ @$document[0..$offset,($offset+$length)..$#$document] ];
+
+		my $new_node = [ $node_type, $sub_document, $sub_document->[0]->[2], $sub_document->[$#$sub_document]->[3] ];
+
+		my $key = node_to_key($new_node);
+
+		$new_document->[$offset] = $new_node;
+
+		if($prune{$key}) {
+			print "SEEN $key\n";
+		} else {
+			push @new_documents, [ $key, $new_document ];
+		}
 	}
 
 	return @new_documents;
@@ -84,6 +98,9 @@ sub get_all_substitutions {
 
 	# push @$subs, [ [ 'document', $document ] ];
 
+	# the order that the substitutions are iterated through affects performance
+	# the grammar rules that are the lowest in the grammar dictionary should be applied first
+
 	foreach my $prefix (@{$grammar->[1]}) {
 		foreach my $offset (0..$#$document) {
 			if(prefix_matches($document, $offset, $prefix)) {
@@ -93,6 +110,11 @@ sub get_all_substitutions {
 	}
 
 	return $subs;
+}
+
+sub node_to_key {
+	my $node = shift;
+	return sprintf('%s[%d-%d]', $node->[0], $node->[2], $node->[3]);
 }
 
 # each node is of the form [ type, [ nodes... ] OR token ]
@@ -107,6 +129,8 @@ sub get_tree {
 
 	my ( $first_type, $first_token ) = @$first_node;
 
+	print join(' ', map { node_to_key($_) } @$document)."\n";
+			
 	if(scalar(@$document) == 1 and $first_type eq 'document') {
 
 		return $document;
@@ -115,11 +139,23 @@ sub get_tree {
 
 		my $all_substitutions = get_all_substitutions($document, $grammar);
 
-		foreach my $subst_document (@$all_substitutions) {
+		foreach my $key_and_subst (@$all_substitutions) {
 
-			print join(' ', map { $_->[0] } @$subst_document)."\n";
+			my ( $key, $subst_document ) = @$key_and_subst;
+
+			# every time we recurse, we need to push/pop the prune tree
+
+			push @prune_stack, {%prune};
+
+			die "ALREADY MARKED $key" if($prune{$key});
+				
+			$prune{$key} = 1;
 
 			my $tree = get_tree($subst_document, $grammar);
+
+			my $popped = pop @prune_stack;
+
+			%prune = %$popped;
 
 			return $tree if(defined $tree);
 		}

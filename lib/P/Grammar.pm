@@ -72,7 +72,11 @@ sub get_grammar {
 
 	my $rules = {};
 
-	my %prefixes;
+	my @prefixes;
+
+	my %seen;
+
+	my $order = 1;
 
 	foreach my $line (split(/\n/, $data)) {
 
@@ -102,17 +106,25 @@ sub get_grammar {
 
 				#
 				# make sure the key doesnt exist but if it does just add the extra rules to the entry
+				# also keep track of the order in which every key is inserted
 				#
 
 				$rules->{$normal_rule} = {} unless(defined $rules->{$normal_rule});
 
-				$rules->{$normal_rule}->{$key} = 1;
+				$rules->{$normal_rule}->{$key} = $order;
+
+				$order += 1;
 
 				#
 				# convert the rule into the actual type prefix
+				# the order that prefixes is populated affects performance
 				#
 
-				$prefixes{$normal_rule} = $prefix;
+				if($seen{$normal_rule}) {
+				} else {
+					unshift @prefixes, $prefix;
+					$seen{$normal_rule} = 1;
+				}
 			}
 
 	    } elsif($line =~ /^\s*$/) {
@@ -127,7 +139,7 @@ sub get_grammar {
 		}
 	}
 
-	return [ $rules, [ values(%prefixes) ] ];
+	return [ $rules, [ @prefixes ] ];
 }
 
 END { }

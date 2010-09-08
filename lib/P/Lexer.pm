@@ -49,9 +49,12 @@ sub get_tokens {
 
 	my $tokens = [];
 
+	my $offset = 0;
+
 	while(length($data) > 0) {
 	    my ( $type, $token, $tail ) = get_type_token_tail($data);
-	    push @$tokens, [ $type, encode_utf8($token) ];
+	    push @$tokens, [ $type, encode_utf8($token), $offset, $offset ];
+		$offset += 1;
 		$data = $tail;
 	}
 

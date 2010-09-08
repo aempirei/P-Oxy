@@ -1,4 +1,4 @@
-<document> := <full_command> <document> | <full_command>
+<document> := <document> <full_command> | <full_command>
 
 <full_command> := <command> <terminator> | <terminator>
 
@@ -8,7 +8,7 @@
 
 <node_assignment> := <node> <left-arrow> <expr>
 
-<list_assignment> := <symbol> <list-op> <symbol> <left-arrow> <expr>
+<list_assignment> := <node> <list-op> <node> <left-arrow> <expr>
 
 <rescope> := <rescope-op> <node>
 
@@ -69,7 +69,7 @@
 
 <terminator> := <NOP>
 
-<NOP> := <EOF> | <EOL> | <NUL>
+<NOP> := <EOF> | <EOL> | <NUL> | <NOP> <NOP>
 
 <EOL> := <newline> | <semicolon> | <comment>
 

@@ -46,7 +46,15 @@ my $tree = P::Parser::get_tree($tokens, $grammar);
 
 sub print_document {
 	my $document = shift;
-	print '<?xml version="1.0"?><program>'.document_to_string($document)."</program>\n";
+	my $return = shift;
+
+	my $value = '<?xml version="1.0"?><program>'.document_to_string($document)."</program>";
+
+	if($return) {
+		return $value;
+	} else {
+		print $value."\n";
+	}
 }
 
 sub document_to_string {

@@ -30,10 +30,6 @@ our @EXPORT_OK;
 
 # apply $prefix from $grammar->[0]->{join('', @$prefix)} to $document->[$offset]
 
-my %prune;
-
-my @prune_stack;
-
 sub get_substitution {
 
 	my ( $document, $offset, $prefix, $grammar ) = @_;
@@ -56,15 +52,9 @@ sub get_substitution {
 
 		my $new_node = [ $node_type, $sub_document, $sub_document->[0]->[2], $sub_document->[$#$sub_document]->[3] ];
 
-		my $key = node_to_key($new_node);
-
 		$new_document->[$offset] = $new_node;
 
-		if($prune{$key}) {
-			print "SEEN $key\n";
-		} else {
-			push @new_documents, [ $key, $new_document ];
-		}
+		push @new_documents, $new_document;
 	}
 
 	return @new_documents;
@@ -101,8 +91,8 @@ sub get_all_substitutions {
 	# the order that the substitutions are iterated through affects performance
 	# the grammar rules that are the lowest in the grammar dictionary should be applied first
 
-	foreach my $prefix (@{$grammar->[1]}) {
-		foreach my $offset (0..$#$document) {
+	foreach my $offset (0..$#$document) {
+		foreach my $prefix (@{$grammar->[1]}) {
 			if(prefix_matches($document, $offset, $prefix)) {
 				push @$subs, get_substitution($document, $offset, $prefix, $grammar);
 			}
@@ -139,25 +129,38 @@ sub get_tree {
 
 		my $all_substitutions = get_all_substitutions($document, $grammar);
 
-		foreach my $key_and_subst (@$all_substitutions) {
-
-			my ( $key, $subst_document ) = @$key_and_subst;
-
-			# every time we recurse, we need to push/pop the prune tree
-
-			push @prune_stack, {%prune};
-
-			die "ALREADY MARKED $key" if($prune{$key});
-				
-			$prune{$key} = 1;
+		foreach my $subst_document (@$all_substitutions) {
 
 			my $tree = get_tree($subst_document, $grammar);
 
-			my $popped = pop @prune_stack;
-
-			%prune = %$popped;
-
 			return $tree if(defined $tree);
+		}
+	}
+
+	return;
+}
+
+sub get_command {
+
+	my ( $document, $grammar ) = @_;
+
+	my $first_node = $document->[0];
+
+	my ( $first_type, $first_token ) = @$first_node;
+
+	if($first_type eq 'full_command') {
+
+		return $first_node;
+
+	} else {
+
+		my $all_substitutions = get_all_substitutions($document, $grammar);
+
+		foreach my $subst_document (@$all_substitutions) {
+
+			my $command = get_command($subst_document, $grammar);
+
+			return $command if(defined $command);
 		}
 	}
 

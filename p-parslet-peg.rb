@@ -21,19 +21,22 @@ class Mini < Parslet::Parser
 	rule(:bs)			{ str('\\') }
 	rule(:fs)			{ str('/') }
 
-	# pre-lexer rules
-
 	rule(:comma)		{ str(',') }
 	rule(:zero)			{ str('0') }
 
-	rule(:hex)			{ match['[:xdigit:]'] }
-	rule(:dec)			{ match['\d'] }
-	rule(:oct)			{ match['0-7'] }
+	# pre-lexer rules
+
 	rule(:bin)			{ match['01'] }
+	rule(:oct)			{ match['0-7'] }
+	rule(:dec)			{ match['[:digit:]'] }
+	rule(:hex)			{ match['[:xdigit:]'] }
 	rule(:alpha)		{ match['[:alpha:]'] }
 	rule(:sym)			{ match['*?|.+^$[]{}'] }
 
-	rule(:decimal)		{ zero | match['1-9'] >> dec.repeat }
+	rule(:binary)			{ str('0b') >> bin.repeat(1) }
+	rule(:decimal)			{ str('0d') >> dec.repeat(1) | zero | match['1-9'] >> dec.repeat }
+	rule(:octal)			{ str('0o') >> oct.repeat(1) | zero >> oct.repeat(1) }
+	rule(:hexidecimal)	{ str('0x') >> hex.repeat(1) }
 
 	# lexer rules
 

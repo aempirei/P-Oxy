@@ -22,9 +22,12 @@ class Mini < Parslet::Parser
 	rule(:comma)		{ str(',') }
 	rule(:zero)			{ str('0') }
 	rule(:bang)			{ str('!') }
+	rule(:dot)			{ str('.') }
 	rule(:fs)			{ str('/') }
 	rule(:sc)			{ str(';') }
 	rule(:us)			{ str('_') }
+	rule(:lp)			{ str('(') }
+	rule(:rp)			{ str(')') }
 	rule(:q?)			{ str('?') }
 
 	#
@@ -39,14 +42,23 @@ class Mini < Parslet::Parser
 	rule(:hex)			{ match['[:xdigit:]'] }
 	rule(:alpha)		{ match['[:alpha:]'] }
 	rule(:alnum)		{ match['[:alnum:]'] }
+	rule(:nonzero)		{ match['1-9'] }
 	rule(:sign)			{ match['-+'] }
 
 		# complete number pre-lexer rules
 
-	rule(:binary)			{ str('0b') >> bin.repeat(1) }
-	rule(:decimal)			{ str('0d') >> dec.repeat(1) | zero | match['1-9'] >> dec.repeat }
-	rule(:octal)			{ str('0o') >> oct.repeat(1) | zero >> oct.repeat(1) }
-	rule(:hexidecimal)	{ str('0x') >> hex.repeat(1) }
+	rule(:decimal0)		{ zero | nonzero >> dec.repeat }
+	rule(:decimal1)		{ zero >> match['Dd'] >> dec.repeat(1) }
+	rule(:decimal2)		{ nonzero >> dec.repeat >> dot.absnt? }
+	rule(:decimal3)		{ zero >> match['DdBbOoXx.'].absnt? }
+
+	rule(:decimal)			{ decimal1 | decimal2 | decimal3 } 
+
+	rule(:binary)			{ zero >> match['Bb'] >> bin.repeat(1) }
+	rule(:octal)			{ zero >> match['Oo'] >> oct.repeat(1) | zero >> oct.repeat(1) }
+	rule(:hexidecimal)	{ zero >> match['Xx'] >> hex.repeat(1) }
+
+	rule(:float)			{ sign.maybe >> decimal0 >> dot >> dec.repeat >> ( match['eE'] >> sign.maybe >> decimal0 ).maybe }
 
 		# op pre-lexer rules
 
@@ -95,10 +107,11 @@ class Mini < Parslet::Parser
 	
 	rule(:base)				{ str('...').as(:base) >> space? }
 
-	rule(:dot)				{ str('.').as(:dot) >> space? }
-
 	rule(:single_qu)		{ tick >> match['^\''].repeat >> tick >> space? }
 	rule(:double_qu)		{ quote >> ( code_expr | match['^"'] ).repeat >> quote >> space? } 
+
+	rule(:integer)			{ ( sign.maybe >> ( binary | octal | decimal | hexidecimal ) ).as(:integer) >> space? }
+	rule(:real)				{ float.as(:real) >> space? }
 
 	# Single character rules
 #	rule(:lparen)		{ str('(') >> space? }
@@ -115,7 +128,7 @@ class Mini < Parslet::Parser
 #	rule(:infixcall)	{ value.as(:left) >> infixop >> expression.as(:right) }
 #	rule(:expression)	{ infixcall | value }
 
-	rule(:command)		{ space? >> ( match_regexp | subst_regexp | symbol ) >> terminator }
+	rule(:command)		{ space? >> ( match_regexp | subst_regexp | real | integer | symbol ) >> terminator }
 	rule(:nop)			{ space? >> eol }
 
 	rule(:expression)	{ ( command | nop ).repeat(1) }

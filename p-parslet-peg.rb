@@ -6,13 +6,36 @@ require 'parslet'
 
 class Mini < Parslet::Parser
 
-	rule(:ws)		{ match('\s').repeat(1) }
-	rule(:ws?)		{ ws.maybe }
+	# whitespace rules
+
+	rule(:ws)			{ match('\s').repeat(1) }
+	rule(:ws?)			{ ws.maybe }
 
 	rule(:space)		{ match('[ \t]').repeat(1) }
 	rule(:space?)		{ space.maybe }
 
-	rule(:nl)		{ match('[\n\r]').repeat(1) >> ws? }
+	rule(:nl)			{ match('[\n\r]').repeat(1) >> ws? }
+
+	# char rules
+
+	rule(:bs)			{ str('\\') }
+	rule(:fs)			{ str('/') }
+
+	# pre-lexer rules
+
+	rule(:comma)		{ str(',') }
+	rule(:zero)			{ str('0') }
+
+	rule(:hex)			{ match['[:xdigit:]'] }
+	rule(:dec)			{ match['\d'] }
+	rule(:oct)			{ match['0-7'] }
+	rule(:bin)			{ match['01'] }
+	rule(:alpha)		{ match['[:alpha:]'] }
+	rule(:sym)			{ match['*?|.+^$[]{}'] }
+
+	rule(:decimal)		{ zero | match['1-9'] >> dec.repeat }
+
+	# lexer rules
 
 	rule(:semicolon)	{ str(';') >> ws? }
 
@@ -20,27 +43,20 @@ class Mini < Parslet::Parser
 
 	rule(:comment)		{ ws? >> ( str('##') >> match('[^\n]').repeat ).as(:comment) >> nl }
 
-	rule(:comma)		{ str(',') }
-	rule(:xdigit)		{ match['[:xdigit:]'] }
-	rule(:digit)		{ match['\d'] }
-	rule(:octal)		{ match['0-7'] }
-	rule(:alpha)		{ match['[:alpha:]'] }
-	rule(:syms)			{ match['[*?|.+^\$\[\]{}'] }
-
-	rule(:dec)			{ str('0') | match['1-9'] >> digit.repeat }
-	rule(:range)		{ str('{') >> ( dec >> comma.maybe | dec >> comma >> dec | comma >> dec ) >> str('}') }
 	rule(:sign)			{ match['-+'] }
 	rule(:halfop)		{ str('<').repeat(2) | str('[').repeat(2) | str('{').repeat(2) }
 	rule(:halfterm)	{ str('>').repeat(2) | str(']').repeat(2) | str('}').repeat(2) }
-	rule(:codes)		{ alpha | str('x') >> xdigit.repeat(2,2) | str('0') >> octal.repeat(0,3) | str('\\') | match['1-9'] >> digit.maybe }
+	rule(:codes)		{ alpha | str('x') >> hex.repeat(2,2) | str('0') >> oct.repeat(0,3) | str('\\') }
 
 	# string rules
 
-	rule(:codeexp)		{ str('\\') >> ( str('/') | syms | codes ) }
+	rule(:litexp)		{ match['^\\/'] }
+	rule(:rangeexp)	{ str('{') >> ( decimal >> comma.maybe | decimal >> comma >> decimal | comma >> decimal ) >> str('}') }
+	rule(:codeexp)		{ str('\\') >> ( str('/') | sym | codes ) }
 
-	rule(:regexp)		{ ( codeexp | range | match['^\\/'] ).repeat }
+	rule(:regexp)		{ ( codeexp | rangeexp | litexp ).repeat }
 
-	rule(:substregexp) { ( str('s/') >> regexp >> str('/') >> ( codeexp |  match['^\\/'] ).repeat >> str('/') >> match['imsg'].repeat ).as(:substregexp) >> space? }
+	rule(:substregexp) { ( str('s/') >> regexp >> str('/') >> ( codeexp | litexp ).repeat >> str('/') >> match['imsg'].repeat ).as(:substregexp) >> space? }
 	rule(:matchregexp) { ( str('/') >> regexp >> str('/') >> match['ims'].repeat ).as(:matchregexp) >> space? }
 
 	# Single character rules

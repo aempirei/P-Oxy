@@ -80,10 +80,15 @@ class Mini < Parslet::Parser
 	rule(:halfop)		{ lt.repeat(2) | ls.repeat(2) | lb.repeat(2) }
 	rule(:halfterm)	{ gt.repeat(2) | rs.repeat(2) | rb.repeat(2) }
 
+		# symbol pre-lexer rules
+
+	rule(:func_symbol)	{ ( ( alpha | us ) >> ( alnum | us ).repeat >> ( bang | q? ).repeat ) }
+	rule(:greek_symbol)	{ match['\u0300-\u03ff'] }
+
 		# regexp pre-lexer rules
 
-	rule(:sym)			{ match['*?|.+^$[]{}'] }
-	rule(:code)			{ alpha | str('x') >> hex.repeat(2,2) | zero >> oct.repeat(0,3) | bs | fs | sym }
+	rule(:sym)			{ match['*?|.+^$\[\]{}'] }
+	rule(:code)			{ alpha | str('x') >> hex.repeat(2,2) | zero >> oct.repeat(0,3) | bs | fs | sym | tick | quote }
 
 	rule(:range_expr)	{ lb >> ( decimal >> comma.maybe | decimal >> comma >> decimal | comma >> decimal ) >> rb }
 	rule(:code_expr)	{ bs >> code }
@@ -115,53 +120,67 @@ class Mini < Parslet::Parser
 	rule(:while_ctrl)		{ str('while').as(:while_ctrl) >> space? }
 	rule(:rescope_ctrl)	{ str('rescope').as(:rescope_ctrl) >> space? }
 
-	rule(:func_symbol)	{ ( ( alpha | us ) >> ( alnum | us ).repeat >> ( bang | q? ).repeat ).as(:symbol) }
-	rule(:greek_symbol)	{ match['\u0300-\u03ff'] }
+	rule(:symbol)			{ func_symbol | greek_symbol }
 	
-	rule(:symbol)			{ ( func_symbol | greek_symbol ).as(:symbol) >> space? }
-	
-	rule(:base)				{ str('...').as(:base) >> space? }
+	rule(:base)				{ str('...') }
 
-	rule(:single_qu)		{ tick >> match['^\''].repeat >> tick >> space? }
-	rule(:double_qu)		{ quote >> ( code_expr | match['^"'] ).repeat >> quote >> space? } 
+	rule(:single_qu)		{ ( tick >> match['^\''].repeat >> tick ).as(:single_qu) >> space? }
+	rule(:double_qu)		{ ( quote >> ( code_expr | match['^"'] ).repeat >> quote ).as(:double_qu) >> space? } 
 
 	rule(:integer)			{ ( sign.maybe >> ( binary | octal | decimal | hexidecimal ) ).as(:integer) >> space? }
 	rule(:real)				{ float.as(:real) >> space? }
 	rule(:boolean)			{ ( boolean_true | boolean_false | boolean_null ).as(:boolean) >> space? }
 
+		# operators (infix)
+
 	rule(:auto_op)			{ ( halfop >> dot >> halfterm ).as(:auto_op) >> space? }
 	rule(:circum_op)		{ ( halfop >> star >> halfterm ).as(:circum_op) >> space? }
+
+	rule(:normal_op)		{ ops.repeat(1).as(:normal_op) >> space? }
+
+	rule(:math_op)			{ match['\u2200-\u22ff'].as(:math_op) >> space? }
+
+		# :op is just regular infix operators, not special ops (list_op) or circumfix operators
+
+	rule(:op)				{ normal_op | math_op | auto_op | circum_op }
+
+		# half operators are circumfix operators applied as such
 
 	rule(:half_op)			{ halfop.as(:half_op) >> space? }
 	rule(:half_term)		{ halfterm.as(:half_term) >> space? }
 
+		# list_op is a special operator / constructor
+
+	rule(:list_op)			{ colon.as(:list_op) >> ops.absnt? >> space? }
+
 	# WARNING: there may be issues with these
 
-	rule(:left_bracket)	{ str('{').as(:left_bracket) >> ops.absnt? >> space? }
-	rule(:right_bracket)	{ str('}').as(:right_bracket) >> ops.absnt? >> space? }
-	rule(:left_arrow)		{ str('<-').as(:left_arrow) >> ops.absnt? >> space? }
-	rule(:right_arrow)	{ str('->').as(:right_arrow) >> ops.absnt? >> space? }
-	rule(:free)				{ q?.as(:free) >> ops.absnt? >> space? }
-	rule(:list_op)			{ colon.as(:list_op) >> ops.absnt? >> space? }
-	rule(:normal_op)		{ ops.repeat(1).as(:normal_op) >> space? }
+	rule(:left_bracket)	{ lb >> ops.absnt? >> space? }
+	rule(:right_bracket)	{ rb >> ops.absnt? >> space? }
+	rule(:left_arrow)		{ lt >> dash >> ops.absnt? >> space? }
+	rule(:right_arrow)	{ dash >> gt >> ops.absnt? >> space? }
+	rule(:free)				{ q?>> ops.absnt? >> space? }
 
-	# Single character rules
-#	rule(:lparen)		{ str('(') >> space? }
-#	rule(:rparen)		{ str(')') >> space? }
-#	rule(:infixop)		{ match('[+*-/]').as(:infixop) >> space? }
+	# parser rules
 
-	# Things
-#	rule(:integer)		{ match('[0-9]').repeat(1).as(:integer) >> space? }
+	rule(:nop)				{ space? >> eol }
 
-	# Grammar parts
-#	rule(:block)		{ lparen >> expression >> rparen }
-#	rule(:value)		{ block | integer }
+	rule(:link)				{ ( node.as(:from) >> right_arrow >> node.as(:to) ).as(:link) >> space? } 
 
-#	rule(:infixcall)	{ value.as(:left) >> infixop >> expression.as(:right) }
-#	rule(:expression)	{ infixcall | value }
+	rule(:node)				{ ( symbol_node | op_node | base ) >> space? }
 
-	rule(:command)		{ space? >> ( match_regexp | subst_regexp | real | integer | boolean | symbol ) >> terminator }
-	rule(:nop)			{ space? >> eol }
+	rule(:symbol_node)	{ path.maybe >> symbol }
+	rule(:op_node)			{ path.maybe >> op }
+
+	rule(:path)				{ base >> part.repeat | part.repeat(1) }
+
+	rule(:part)				{ symbol >> dot }
+
+	rule(:command)			{ space? >> ( link ).as(:command) >> terminator }
+
+	# rule(:command)		{ space? >> ( match_regexp | subst_regexp | real | integer | boolean | symbol ) >> terminator }
+	# rule(:command)		{ space? >> ( assignment | link | each | expr ) >> terminator }
+	# rule(:command)		{ space? >> ( single_qu | double_qu | match_regexp | subst_regexp | real | integer | boolean | symbol | auto_op | circum_op | normal_op ) >> terminator }
 
 	rule(:expression)	{ ( command | nop ).repeat(1) }
 	root :expression

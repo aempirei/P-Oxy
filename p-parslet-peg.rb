@@ -132,18 +132,18 @@ class Mini < Parslet::Parser
 	rule(:auto_op)			{ ( halfop >> dot >> halfterm ).as(:auto_op) >> space? }
 	rule(:circum_op)		{ ( halfop >> star >> halfterm ).as(:circum_op) >> space? }
 
-	rule(:half_op)			{ halfop.as(:half_op) >> space? )}
-	rule(:half_term)		{ halfterm.as(:half_term) >> space? )}
+	rule(:half_op)			{ halfop.as(:half_op) >> space? }
+	rule(:half_term)		{ halfterm.as(:half_term) >> space? }
 
 	# WARNING: there may be issues with these
 
-	rule(:left_bracket)	{ str('{') >> str('{').absnt? >> space? }
-	rule(:right_bracket)	{ str('}') >> str('{').absnt? >> space? }
-	rule(:left_arrow)		{ str('<-') >> space? }
-	rule(:right_arrow)	{ str('->') >> space? }
-	rule(:free)				{ q? >> space? }
-	rule(:list_op)			{ colon >> space? }
-	rule(:normal_op)		{ ops.repeat(1) >> space? }
+	rule(:left_bracket)	{ str('{').as(:left_bracket) >> ops.absnt? >> space? }
+	rule(:right_bracket)	{ str('}').as(:right_bracket) >> ops.absnt? >> space? }
+	rule(:left_arrow)		{ str('<-').as(:left_arrow) >> ops.absnt? >> space? }
+	rule(:right_arrow)	{ str('->').as(:right_arrow) >> ops.absnt? >> space? }
+	rule(:free)				{ q?.as(:free) >> ops.absnt? >> space? }
+	rule(:list_op)			{ colon.as(:list_op) >> ops.absnt? >> space? }
+	rule(:normal_op)		{ ops.repeat(1).as(:normal_op) >> space? }
 
 	# Single character rules
 #	rule(:lparen)		{ str('(') >> space? }

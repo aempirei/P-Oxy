@@ -1,8 +1,9 @@
 #!/usr/bin/env ruby
+# encoding: UTF-8
 
 require 'rubygems'
-
 require 'parslet'
+require 'unicode'
 
 class Mini < Parslet::Parser
 
@@ -36,6 +37,11 @@ class Mini < Parslet::Parser
 	rule(:alnum)		{ match['[:alnum:]'] }
 	rule(:sign)			{ match['-+'] }
 
+		# unicode char rules
+		# FIXME: UTF-8 / UNICODE does not work
+
+	rule(:greek)		{ match['\u0300-\u03ff'] }
+
 		# complete number pre-lexer rules
 
 	rule(:binary)			{ str('0b') >> bin.repeat(1) }
@@ -60,7 +66,7 @@ class Mini < Parslet::Parser
 
 	# lexer rules
 
-	rule(:comment)		{ str('##') >> match['^\n'].repeat }
+	rule(:comment)		{ str('##') >> ( str('e') | match['^\n'] ).repeat }
 	rule(:eol)			{ comment.maybe >> lf }
 	rule(:terminator)		{ sc | eol }
 
@@ -98,7 +104,7 @@ class Mini < Parslet::Parser
 #	rule(:infixcall)	{ value.as(:left) >> infixop >> expression.as(:right) }
 #	rule(:expression)	{ infixcall | value }
 
-	rule(:command)		{ space? >> ( match_regexp | subst_regexp ) >> terminator }
+	rule(:command)		{ space? >> ( match_regexp | subst_regexp | symbol ) >> terminator }
 	rule(:nop)			{ space? >> eol }
 
 	rule(:expression)	{ ( command | nop ).repeat(1) }

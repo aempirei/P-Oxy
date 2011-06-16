@@ -106,7 +106,7 @@ class Mini < Parslet::Parser
 	rule(:subst_regexp)	{ ( str('s/') >> regexp >> fs >> ( code_expr | lit_expr ).repeat >> fs >> match['imsg'].repeat ).as(:subst_regexp) >> space? }
 	rule(:match_regexp)	{ ( fs >> regexp >> fs >> match['ims'].repeat ).as(:match_regexp) >> space? }
 
-	rule(:unicode_expr)	{ ( str('U+') >> hex.repeat(4,4) ).as(:unicode_expr) >> space? }
+	rule(:unicode)			{ ( str('U+') >> hex.repeat(4,4) ).as(:unicode) >> space? }
 
 	rule(:if_ctrl)			{ str('if').as(:if_ctrl) >> space? }
 	rule(:then_ctrl)		{ str('then').as(:then_ctrl) >> space? }
@@ -115,7 +115,7 @@ class Mini < Parslet::Parser
 	rule(:is_ctrl)			{ str('is').as(:is_ctrl) >> space? }
 	rule(:do_ctrl)			{ str('do').as(:do_ctrl) >> space? }
 	rule(:wait_ctrl)		{ str('wait').as(:wait_ctrl) >> space? }
-	rule(:each_ctrl)		{ str('each').as(:each_ctrl) >> space? }
+	rule(:each_ctrl)		{ str('each').as(:each_ctrl) >> rpace? }
 	rule(:all_ctrl)		{ str('all').as(:all_ctrl) >> space? }
 	rule(:while_ctrl)		{ str('while').as(:while_ctrl) >> space? }
 	rule(:rescope_ctrl)	{ str('rescope').as(:rescope_ctrl) >> space? }
@@ -127,9 +127,9 @@ class Mini < Parslet::Parser
 	rule(:single_qu)		{ ( tick >> match['^\''].repeat >> tick ).as(:single_qu) >> space? }
 	rule(:double_qu)		{ ( quote >> ( code_expr | match['^"'] ).repeat >> quote ).as(:double_qu) >> space? } 
 
-	rule(:integer)			{ ( sign.maybe >> ( binary | octal | decimal | hexidecimal ) ).as(:integer) >> space? }
-	rule(:real)				{ float.as(:real) >> space? }
-	rule(:boolean)			{ ( boolean_true | boolean_false | boolean_null ).as(:boolean) >> space? }
+	rule(:integer_val)	{ ( sign.maybe >> ( binary | octal | decimal | hexidecimal ) ).as(:integer_val) >> space? }
+	rule(:real_val)		{ float.as(:real_val) >> space? }
+	rule(:boolean_val)	{ ( boolean_true | boolean_false | boolean_null ).as(:boolean_val) >> space? }
 
 		# operators (infix)
 
@@ -165,6 +165,8 @@ class Mini < Parslet::Parser
 
 	rule(:nop)				{ space? >> eol }
 
+		# link
+
 	rule(:link)				{ ( node.as(:from) >> right_arrow >> node.as(:to) ).as(:link) >> space? } 
 
 	rule(:node)				{ ( symbol_node | op_node | base ) >> space? }
@@ -176,14 +178,45 @@ class Mini < Parslet::Parser
 
 	rule(:part)				{ symbol >> dot }
 
-	rule(:command)			{ space? >> ( link ).as(:command) >> terminator }
+		# assign
+	
+	rule(:assign)			{ list_assign | node_assign }
 
-	# rule(:command)		{ space? >> ( match_regexp | subst_regexp | real | integer | boolean | symbol ) >> terminator }
-	# rule(:command)		{ space? >> ( assignment | link | each | expr ) >> terminator }
-	# rule(:command)		{ space? >> ( single_qu | double_qu | match_regexp | subst_regexp | real | integer | boolean | symbol | auto_op | circum_op | normal_op ) >> terminator }
+	rule(:list_assign)	{ node.as(:to) >> left_arrow >> expr.as(:from) }
+	rule(:node_assign)	{ node.as(:head) >> list_op >> node.as(:tail) >> left_arrow >> expr.as(:from) }
 
-	rule(:expression)	{ ( command | nop ).repeat(1) }
-	root :expression
+		# each
+
+	rule(:each)				{ nop }
+
+		# expr
+
+	rule(:call_expr)		{ nop }
+	rule(:literal_expr)	{ string_literal | regexp_literal | numeric_literal }
+	rule(:lambda_expr)	{ nop }
+	rule(:cond_expr)		{ nop }
+	rule(:all_expr)		{ nop }
+	rule(:list_expr)		{ nop }
+	rule(:do_expr)			{ nop }
+	rule(:wait_expr)		{ nop }
+
+	rule(:string_literal)	{ single_qu | double_qu | unicode }
+	rule(:regexp_literal)	{ match_regexp | subst_regexp }
+	rule(:numeric_literal)	{ integer_val | real_val | boolean_val }
+
+	rule(:expr1)			{ call_expr | literal_expr | lambda_expr | cond_expr | all_expr | list_expr | do_expr | wait_expr }
+	rule(:expr2)			{ lp >> expr >> rp }
+	rule(:expr)				{ ( expr1 | expr2 ).as(:expr) >> space? }
+
+		# command
+
+	rule(:command)			{ space? >> ( link | assign | each | expr ).as(:command) >> terminator }
+
+		# document
+
+	rule(:document)		{ ( command | nop ).repeat(1) }
+
+	root :document
 end
 
 input = STDIN.read

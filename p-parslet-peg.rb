@@ -80,6 +80,16 @@ class Mini < Parslet::Parser
 	rule(:halfop)		{ lt.repeat(2) | ls.repeat(2) | lb.repeat(2) }
 	rule(:halfterm)	{ gt.repeat(2) | rs.repeat(2) | rb.repeat(2) }
 
+			# infix ops
+
+	rule(:normal_op)		{ str('##').absnt? >> ops.repeat(1) }
+	rule(:math_op)			{ match['\u2200-\u22ff'] }
+
+			# prefix ops
+
+	rule(:auto_op)			{ ( halfop >> dot >> halfterm ) }
+	rule(:circum_op)		{ ( halfop >> star >> halfterm ) }
+
 		# symbol pre-lexer rules
 
 	rule(:func_symbol)	{ ( ( alpha | us ) >> ( alnum | us ).repeat >> ( bang | q? ).repeat ) }
@@ -131,18 +141,17 @@ class Mini < Parslet::Parser
 	rule(:real_val)		{ float.as(:real_val) >> space? }
 	rule(:boolean_val)	{ ( boolean_true | boolean_false | boolean_null ).as(:boolean_val) >> space? }
 
+		# operators (prefix) -- aka symbols or operator nodes -- need to make more consistent descriptions
+
+	rule(:prefix_op)		{ ( auto_op | circum_op ).as(:prefix_op) >> space? }
+
 		# operators (infix)
 
-	rule(:auto_op)			{ ( halfop >> dot >> halfterm ).as(:auto_op) >> space? }
-	rule(:circum_op)		{ ( halfop >> star >> halfterm ).as(:circum_op) >> space? }
+	rule(:infix_op)		{ ( normal_op | math_op ).as(:infix_op) >> space? }
 
-	rule(:normal_op)		{ ops.repeat(1).as(:normal_op) >> space? }
+	# :op is just regular operators -- both prefix and infix, not special ops (list_op) or half-ops
 
-	rule(:math_op)			{ match['\u2200-\u22ff'].as(:math_op) >> space? }
-
-		# :op is just regular infix operators, not special ops (list_op) or circumfix operators
-
-	rule(:op)				{ normal_op | math_op | auto_op | circum_op }
+	rule(:op)				{ infix_op | auto_op | circum_op }
 
 		# half operators are circumfix operators applied as such
 
@@ -182,31 +191,42 @@ class Mini < Parslet::Parser
 	
 	rule(:assign)			{ list_assign | node_assign }
 
-	rule(:list_assign)	{ node.as(:to) >> left_arrow >> expr.as(:from) }
-	rule(:node_assign)	{ node.as(:head) >> list_op >> node.as(:tail) >> left_arrow >> expr.as(:from) }
+	rule(:node_assign)	{ node.as(:to) >> left_arrow >> expr.as(:from) }
+	rule(:list_assign)	{ node.as(:head) >> list_op >> node.as(:tail) >> left_arrow >> expr.as(:from) }
 
 		# each
 
-	rule(:each)				{ nop }
+	rule(:each)				{ str("unimplemented_replace") }
 
 		# expr
 
-	rule(:call_expr)		{ nop }
+	rule(:expr1)			{ call_expr | literal_expr | lambda_expr | cond_expr | all_expr | list_expr | do_expr | wait_expr }
+	rule(:expr2)			{ lp >> expr >> rp }
+
+	rule(:expr)				{ ( expr1 | expr2 ).as(:expr) >> space? }
+
+	rule(:call_expr)		{ infix_call | prefix_call | circum_call }
 	rule(:literal_expr)	{ string_literal | regexp_literal | numeric_literal }
-	rule(:lambda_expr)	{ nop }
-	rule(:cond_expr)		{ nop }
-	rule(:all_expr)		{ nop }
-	rule(:list_expr)		{ nop }
-	rule(:do_expr)			{ nop }
-	rule(:wait_expr)		{ nop }
+	rule(:lambda_expr)	{ str("unimplemented_replace") }
+	rule(:cond_expr)		{ str("unimplemented_replace") }
+	rule(:all_expr)		{ str("unimplemented_replace") }
+	rule(:list_expr)		{ str("left_recursion_breaker") >> param >> list_op >> param } # FIXME: left recursion problem
+	rule(:do_expr)			{ str("unimplemented_replace") }
+	rule(:wait_expr)		{ str("unimplemented_replace") }
+
+			# literal_expr
 
 	rule(:string_literal)	{ single_qu | double_qu | unicode }
 	rule(:regexp_literal)	{ match_regexp | subst_regexp }
 	rule(:numeric_literal)	{ integer_val | real_val | boolean_val }
 
-	rule(:expr1)			{ call_expr | literal_expr | lambda_expr | cond_expr | all_expr | list_expr | do_expr | wait_expr }
-	rule(:expr2)			{ lp >> expr >> rp }
-	rule(:expr)				{ ( expr1 | expr2 ).as(:expr) >> space? }
+			# call_expr
+
+	rule(:infix_call)		{ str("left_recursion_breaker") >> param >> infix_op >> param } # FIXME: left recursion problem
+	rule(:prefix_call)	{ node >> param.repeat }
+	rule(:circum_call)	{ half_op >> param.repeat >> half_term }
+
+	rule(:param)			{ expr | free } # FIXME: left recursion problem
 
 		# command
 

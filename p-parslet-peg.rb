@@ -49,19 +49,33 @@ class Mini < Parslet::Parser
 	rule(:sym)			{ match['*?|.+^$[]{}'] }
 	rule(:code)			{ alpha | str('x') >> hex.repeat(2,2) | zero >> oct.repeat(0,3) | bs | fs | sym }
 
-	rule(:rangeexp)	{ str('{') >> ( decimal >> comma.maybe | decimal >> comma >> decimal | comma >> decimal ) >> str('}') }
-	rule(:codeexp)		{ bs >> code }
-	rule(:litexp)		{ match['^\\/'] }
-	rule(:regexp)		{ ( codeexp | rangeexp | litexp ).repeat }
+	rule(:range_expr)	{ str('{') >> ( decimal >> comma.maybe | decimal >> comma >> decimal | comma >> decimal ) >> str('}') }
+	rule(:code_expr)		{ bs >> code }
+	rule(:lit_expr)		{ match['^\\/'] }
+	rule(:regexp)		{ ( code_expr | range_expr | lit_expr ).repeat }
 
 	# lexer rules
 
 	rule(:terminator)	{ sc | comment | eol }
 	rule(:comment)		{ space? >> str('##') >> match('[^\n]').repeat.as(:comment) >> lf }
-	rule(:eol)	{ space? >> lf }
+	rule(:eol)			{ space? >> lf }
 
-	rule(:substregexp) { ( str('s/') >> regexp >> str('/') >> ( codeexp | litexp ).repeat >> str('/') >> match['imsg'].repeat ).as(:substregexp) >> space? }
-	rule(:matchregexp) { ( str('/') >> regexp >> str('/') >> match['ims'].repeat ).as(:matchregexp) >> space? }
+	rule(:subst_regexp)	{ ( str('s/') >> regexp >> str('/') >> ( code_expr | lit_expr ).repeat >> str('/') >> match['imsg'].repeat ).as(:subst_regexp) >> space? }
+	rule(:match_regexp)	{ ( str('/') >> regexp >> str('/') >> match['ims'].repeat ).as(:match_regexp) >> space? }
+
+	rule(:unicode_expr)	{ str('U+') >> hex.repeat(4,4) >> space? }
+
+	rule(:if_ctrl) { str('if') }
+	rule(:then_ctrl) { str('then') }
+	rule(:else_ctrl) { str('else') }
+	rule(:elif_ctrl) { str('elif') }
+	rule(:is_ctrl) { str('is') }
+	rule(:do_ctrl) { str('do') }
+	rule(:wait_ctrl) { str('wait') }
+	rule(:each_ctrl) { str('each') }
+	rule(:all_ctrl) { str('all') }
+	rule(:while_ctrl) { str('while') }
+	rule(:rescope_ctrl) { str('rescope') }
 
 	# Single character rules
 #	rule(:lparen)		{ str('(') >> space? }
@@ -78,7 +92,7 @@ class Mini < Parslet::Parser
 #	rule(:infixcall)	{ value.as(:left) >> infixop >> expression.as(:right) }
 #	rule(:expression)	{ infixcall | value }
 
-	rule(:command)		{ space? >> ( matchregexp | substregexp ) >> terminator }
+	rule(:command)		{ space? >> ( match_regexp | subst_regexp ) >> terminator }
 
 	rule(:expression)	{ ( command | comment | eol ).repeat(1) }
 	root :expression

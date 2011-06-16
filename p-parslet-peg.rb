@@ -13,13 +13,16 @@ class Mini < Parslet::Parser
 
 	# char rules
 
+	rule(:lf)			{ str("\n") }
+	rule(:cr)			{ str("\r") }
 	rule(:bs)			{ str('\\') }
 	rule(:fs)			{ str('/') }
 	rule(:sc)			{ str(';') }
-	rule(:comma)		{ str(',') }
+	rule(:us)			{ str('_') }
+	rule(:q?)			{ str('?') }
 	rule(:zero)			{ str('0') }
-	rule(:lf)			{ str("\n") }
-	rule(:cr)			{ str("\r") }
+	rule(:comma)		{ str(',') }
+	rule(:bang)			{ str('!') }
 
 	# pre-lexer rules
 
@@ -30,6 +33,7 @@ class Mini < Parslet::Parser
 	rule(:dec)			{ match['[:digit:]'] }
 	rule(:hex)			{ match['[:xdigit:]'] }
 	rule(:alpha)		{ match['[:alpha:]'] }
+	rule(:alnum)		{ match['[:alnum:]'] }
 	rule(:sign)			{ match['-+'] }
 
 		# complete number pre-lexer rules
@@ -50,32 +54,34 @@ class Mini < Parslet::Parser
 	rule(:code)			{ alpha | str('x') >> hex.repeat(2,2) | zero >> oct.repeat(0,3) | bs | fs | sym }
 
 	rule(:range_expr)	{ str('{') >> ( decimal >> comma.maybe | decimal >> comma >> decimal | comma >> decimal ) >> str('}') }
-	rule(:code_expr)		{ bs >> code }
-	rule(:lit_expr)		{ match['^\\/'] }
+	rule(:code_expr)	{ bs >> code }
+	rule(:lit_expr)	{ match['^\\/'] }
 	rule(:regexp)		{ ( code_expr | range_expr | lit_expr ).repeat }
 
 	# lexer rules
 
-	rule(:terminator)	{ sc | comment | eol }
-	rule(:comment)		{ space? >> str('##') >> match('[^\n]').repeat.as(:comment) >> lf }
-	rule(:eol)			{ space? >> lf }
+	rule(:comment)		{ str('##') >> match['^\n'].repeat }
+	rule(:eol)			{ comment.maybe >> lf }
+	rule(:terminator)		{ sc | eol }
 
-	rule(:subst_regexp)	{ ( str('s/') >> regexp >> str('/') >> ( code_expr | lit_expr ).repeat >> str('/') >> match['imsg'].repeat ).as(:subst_regexp) >> space? }
-	rule(:match_regexp)	{ ( str('/') >> regexp >> str('/') >> match['ims'].repeat ).as(:match_regexp) >> space? }
+	rule(:subst_regexp)	{ ( str('s/') >> regexp >> fs >> ( code_expr | lit_expr ).repeat >> fs >> match['imsg'].repeat ).as(:subst_regexp) >> space? }
+	rule(:match_regexp)	{ ( fs >> regexp >> fs >> match['ims'].repeat ).as(:match_regexp) >> space? }
 
-	rule(:unicode_expr)	{ str('U+') >> hex.repeat(4,4) >> space? }
+	rule(:unicode_expr)	{ ( str('U+') >> hex.repeat(4,4) ).as(:unicode_expr) >> space? }
 
-	rule(:if_ctrl) { str('if').as(:if_ctrl) >> space? }
-	rule(:then_ctrl) { str('then').as(:then_ctrl) >> space? }
-	rule(:else_ctrl) { str('else').as(:else_ctrl) >> space? }
-	rule(:elif_ctrl) { str('elif').as(:elif_ctrl) >> space? }
-	rule(:is_ctrl) { str('is').as(:is_ctrl) >> space? }
-	rule(:do_ctrl) { str('do').as(:do_ctrl) >> space? }
-	rule(:wait_ctrl) { str('wait').as(:wait_ctrl) >> space? }
-	rule(:each_ctrl) { str('each').as(:each_ctrl) >> space? }
-	rule(:all_ctrl) { str('all').as(:all_ctrl) >> space? }
-	rule(:while_ctrl) { str('while').as(:while_ctrl) >> space? }
-	rule(:rescope_ctrl) { str('rescope').as(:rescope_ctrl) >> space? }
+	rule(:if_ctrl)			{ str('if').as(:if_ctrl) >> space? }
+	rule(:then_ctrl)		{ str('then').as(:then_ctrl) >> space? }
+	rule(:else_ctrl)		{ str('else').as(:else_ctrl) >> space? }
+	rule(:elif_ctrl)		{ str('elif').as(:elif_ctrl) >> space? }
+	rule(:is_ctrl)			{ str('is').as(:is_ctrl) >> space? }
+	rule(:do_ctrl)			{ str('do').as(:do_ctrl) >> space? }
+	rule(:wait_ctrl)		{ str('wait').as(:wait_ctrl) >> space? }
+	rule(:each_ctrl)		{ str('each').as(:each_ctrl) >> space? }
+	rule(:all_ctrl)		{ str('all').as(:all_ctrl) >> space? }
+	rule(:while_ctrl)		{ str('while').as(:while_ctrl) >> space? }
+	rule(:rescope_ctrl)	{ str('rescope').as(:rescope_ctrl) >> space? }
+
+	rule(:symbol)			{ ( ( alpha | us ) >> ( alnum | us ).repeat >> ( bang | q? ).repeat ).as(:symbol) >> space? }
 
 	# Single character rules
 #	rule(:lparen)		{ str('(') >> space? }
@@ -93,8 +99,9 @@ class Mini < Parslet::Parser
 #	rule(:expression)	{ infixcall | value }
 
 	rule(:command)		{ space? >> ( match_regexp | subst_regexp ) >> terminator }
+	rule(:nop)			{ space? >> eol }
 
-	rule(:expression)	{ ( command | comment | eol ).repeat(1) }
+	rule(:expression)	{ ( command | nop ).repeat(1) }
 	root :expression
 end
 

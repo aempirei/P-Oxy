@@ -22,13 +22,23 @@ class Mini < Parslet::Parser
 	rule(:comma)		{ str(',') }
 	rule(:zero)			{ str('0') }
 	rule(:bang)			{ str('!') }
+	rule(:dash)			{ str('-') }
+	rule(:star)			{ str('*') }
 	rule(:dot)			{ str('.') }
+	rule(:eq)			{ str('=') }
 	rule(:fs)			{ str('/') }
 	rule(:sc)			{ str(';') }
 	rule(:us)			{ str('_') }
 	rule(:lp)			{ str('(') }
 	rule(:rp)			{ str(')') }
 	rule(:q?)			{ str('?') }
+	rule(:colon)		{ str(':') }
+	rule(:lt)			{ str('<') }
+	rule(:gt)			{ str('>') }
+	rule(:ls)			{ str('[') }
+	rule(:rs)			{ str(']') }
+	rule(:lb)			{ str('{') }
+	rule(:rb)			{ str('}') }
 
 	#
 	# pre-lexer rules
@@ -44,6 +54,7 @@ class Mini < Parslet::Parser
 	rule(:alnum)		{ match['[:alnum:]'] }
 	rule(:nonzero)		{ match['1-9'] }
 	rule(:sign)			{ match['-+'] }
+	rule(:ops)			{ match['-^=+\[\]<>?\/\\,?:;*&~|%#~\`\$@!{}'] }
 
 		# complete number pre-lexer rules
 
@@ -60,17 +71,21 @@ class Mini < Parslet::Parser
 
 	rule(:float)			{ sign.maybe >> decimal0 >> dot >> dec.repeat >> ( match['eE'] >> sign.maybe >> decimal0 ).maybe }
 
+	rule(:boolean_true)	{ match['tT'] >> match['rR'] >> match['uU'] >> match['eE'] }
+	rule(:boolean_false)	{ match['fF'] >> match['aA'] >> match['lL'] >> match['sS'] >> match['eE'] }
+	rule(:boolean_null)	{ match['nN'] >> match['uU'] >> match['lL'] >> match['lL'] }
+
 		# op pre-lexer rules
 
-	rule(:halfop)		{ str('<').repeat(2) | str('[').repeat(2) | str('{').repeat(2) }
-	rule(:halfterm)	{ str('>').repeat(2) | str(']').repeat(2) | str('}').repeat(2) }
+	rule(:halfop)		{ lt.repeat(2) | ls.repeat(2) | lb.repeat(2) }
+	rule(:halfterm)	{ gt.repeat(2) | rs.repeat(2) | rb.repeat(2) }
 
 		# regexp pre-lexer rules
 
 	rule(:sym)			{ match['*?|.+^$[]{}'] }
 	rule(:code)			{ alpha | str('x') >> hex.repeat(2,2) | zero >> oct.repeat(0,3) | bs | fs | sym }
 
-	rule(:range_expr)	{ str('{') >> ( decimal >> comma.maybe | decimal >> comma >> decimal | comma >> decimal ) >> str('}') }
+	rule(:range_expr)	{ lb >> ( decimal >> comma.maybe | decimal >> comma >> decimal | comma >> decimal ) >> rb }
 	rule(:code_expr)	{ bs >> code }
 	rule(:lit_expr)	{ match['^\\/'] }
 	rule(:regexp)		{ ( code_expr | range_expr | lit_expr ).repeat }
@@ -112,6 +127,23 @@ class Mini < Parslet::Parser
 
 	rule(:integer)			{ ( sign.maybe >> ( binary | octal | decimal | hexidecimal ) ).as(:integer) >> space? }
 	rule(:real)				{ float.as(:real) >> space? }
+	rule(:boolean)			{ ( boolean_true | boolean_false | boolean_null ).as(:boolean) >> space? }
+
+	rule(:auto_op)			{ ( halfop >> dot >> halfterm ).as(:auto_op) >> space? }
+	rule(:circum_op)		{ ( halfop >> star >> halfterm ).as(:circum_op) >> space? }
+
+	rule(:half_op)			{ halfop.as(:half_op) >> space? )}
+	rule(:half_term)		{ halfterm.as(:half_term) >> space? )}
+
+	# WARNING: there may be issues with these
+
+	rule(:left_bracket)	{ str('{') >> str('{').absnt? >> space? }
+	rule(:right_bracket)	{ str('}') >> str('{').absnt? >> space? }
+	rule(:left_arrow)		{ str('<-') >> space? }
+	rule(:right_arrow)	{ str('->') >> space? }
+	rule(:free)				{ q? >> space? }
+	rule(:list_op)			{ colon >> space? }
+	rule(:normal_op)		{ ops.repeat(1) >> space? }
 
 	# Single character rules
 #	rule(:lparen)		{ str('(') >> space? }
@@ -128,7 +160,7 @@ class Mini < Parslet::Parser
 #	rule(:infixcall)	{ value.as(:left) >> infixop >> expression.as(:right) }
 #	rule(:expression)	{ infixcall | value }
 
-	rule(:command)		{ space? >> ( match_regexp | subst_regexp | real | integer | symbol ) >> terminator }
+	rule(:command)		{ space? >> ( match_regexp | subst_regexp | real | integer | boolean | symbol ) >> terminator }
 	rule(:nop)			{ space? >> eol }
 
 	rule(:expression)	{ ( command | nop ).repeat(1) }

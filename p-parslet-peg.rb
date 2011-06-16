@@ -11,8 +11,6 @@ class Mini < Parslet::Parser
 	rule(:space)		{ match('[ \t]').repeat(1) }
 	rule(:space?)		{ space.maybe }
 
-	rule(:blankline)	{ space? >> lf }
-
 	# char rules
 
 	rule(:bs)			{ str('\\') }
@@ -25,37 +23,42 @@ class Mini < Parslet::Parser
 
 	# pre-lexer rules
 
+		# numeric digit pre-lexer rules
+
 	rule(:bin)			{ match['01'] }
 	rule(:oct)			{ match['0-7'] }
 	rule(:dec)			{ match['[:digit:]'] }
 	rule(:hex)			{ match['[:xdigit:]'] }
 	rule(:alpha)		{ match['[:alpha:]'] }
-	rule(:sym)			{ match['*?|.+^$[]{}'] }
+	rule(:sign)			{ match['-+'] }
+
+		# complete number pre-lexer rules
 
 	rule(:binary)			{ str('0b') >> bin.repeat(1) }
 	rule(:decimal)			{ str('0d') >> dec.repeat(1) | zero | match['1-9'] >> dec.repeat }
 	rule(:octal)			{ str('0o') >> oct.repeat(1) | zero >> oct.repeat(1) }
 	rule(:hexidecimal)	{ str('0x') >> hex.repeat(1) }
 
-	# lexer rules
+		# op pre-lexer rules
 
-
-	rule(:terminator)	{ sc | comment.maybe >> lf }
-
-	rule(:comment)		{ ( str('##') >> match('[^\n]').repeat ).as(:comment) >> lf }
-
-	rule(:sign)			{ match['-+'] }
 	rule(:halfop)		{ str('<').repeat(2) | str('[').repeat(2) | str('{').repeat(2) }
 	rule(:halfterm)	{ str('>').repeat(2) | str(']').repeat(2) | str('}').repeat(2) }
-	rule(:codes)		{ alpha | str('x') >> hex.repeat(2,2) | str('0') >> oct.repeat(0,3) | str('\\') }
 
-	# string rules
+		# regexp pre-lexer rules
 
-	rule(:litexp)		{ match['^\\/'] }
+	rule(:sym)			{ match['*?|.+^$[]{}'] }
+	rule(:code)			{ alpha | str('x') >> hex.repeat(2,2) | zero >> oct.repeat(0,3) | bs | fs | sym }
+
 	rule(:rangeexp)	{ str('{') >> ( decimal >> comma.maybe | decimal >> comma >> decimal | comma >> decimal ) >> str('}') }
-	rule(:codeexp)		{ str('\\') >> ( str('/') | sym | codes ) }
-
+	rule(:codeexp)		{ bs >> code }
+	rule(:litexp)		{ match['^\\/'] }
 	rule(:regexp)		{ ( codeexp | rangeexp | litexp ).repeat }
+
+	# lexer rules
+
+	rule(:terminator)	{ sc | comment | eol }
+	rule(:comment)		{ space? >> str('##') >> match('[^\n]').repeat.as(:comment) >> lf }
+	rule(:eol)	{ space? >> lf }
 
 	rule(:substregexp) { ( str('s/') >> regexp >> str('/') >> ( codeexp | litexp ).repeat >> str('/') >> match['imsg'].repeat ).as(:substregexp) >> space? }
 	rule(:matchregexp) { ( str('/') >> regexp >> str('/') >> match['ims'].repeat ).as(:matchregexp) >> space? }
@@ -75,9 +78,9 @@ class Mini < Parslet::Parser
 #	rule(:infixcall)	{ value.as(:left) >> infixop >> expression.as(:right) }
 #	rule(:expression)	{ infixcall | value }
 
-	rule(:command)		{ ( matchregexp | substregexp ) >> terminator }
+	rule(:command)		{ space? >> ( matchregexp | substregexp ) >> terminator }
 
-	rule(:expression)	{ command.repeat(1) }
+	rule(:expression)	{ ( command | comment | eol ).repeat(1) }
 	root :expression
 end
 

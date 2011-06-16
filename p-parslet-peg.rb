@@ -8,21 +8,20 @@ class Mini < Parslet::Parser
 
 	# whitespace rules
 
-	rule(:ws)			{ match('\s').repeat(1) }
-	rule(:ws?)			{ ws.maybe }
-
 	rule(:space)		{ match('[ \t]').repeat(1) }
 	rule(:space?)		{ space.maybe }
 
-	rule(:nl)			{ match('[\n\r]').repeat(1) >> ws? }
+	rule(:blankline)	{ space? >> lf }
 
 	# char rules
 
 	rule(:bs)			{ str('\\') }
 	rule(:fs)			{ str('/') }
-
+	rule(:sc)			{ str(';') }
 	rule(:comma)		{ str(',') }
 	rule(:zero)			{ str('0') }
+	rule(:lf)			{ str("\n") }
+	rule(:cr)			{ str("\r") }
 
 	# pre-lexer rules
 
@@ -40,11 +39,10 @@ class Mini < Parslet::Parser
 
 	# lexer rules
 
-	rule(:semicolon)	{ str(';') >> ws? }
 
-	rule(:terminator)	{ semicolon | nl }
+	rule(:terminator)	{ sc | comment.maybe >> lf }
 
-	rule(:comment)		{ ws? >> ( str('##') >> match('[^\n]').repeat ).as(:comment) >> nl }
+	rule(:comment)		{ ( str('##') >> match('[^\n]').repeat ).as(:comment) >> lf }
 
 	rule(:sign)			{ match['-+'] }
 	rule(:halfop)		{ str('<').repeat(2) | str('[').repeat(2) | str('{').repeat(2) }
@@ -77,7 +75,9 @@ class Mini < Parslet::Parser
 #	rule(:infixcall)	{ value.as(:left) >> infixop >> expression.as(:right) }
 #	rule(:expression)	{ infixcall | value }
 
-	rule(:expression)	{ ( comment | ( matchregexp | substregexp ) >> nl.maybe ).repeat }
+	rule(:command)		{ ( matchregexp | substregexp ) >> terminator }
+
+	rule(:expression)	{ command.repeat(1) }
 	root :expression
 end
 

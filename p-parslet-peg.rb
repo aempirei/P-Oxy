@@ -17,15 +17,19 @@ class Mini < Parslet::Parser
 	rule(:lf)			{ str("\n") }
 	rule(:cr)			{ str("\r") }
 	rule(:bs)			{ str('\\') }
+	rule(:tick)			{ str('\'') }
+	rule(:quote)		{ str('"') }
+	rule(:comma)		{ str(',') }
+	rule(:zero)			{ str('0') }
+	rule(:bang)			{ str('!') }
 	rule(:fs)			{ str('/') }
 	rule(:sc)			{ str(';') }
 	rule(:us)			{ str('_') }
 	rule(:q?)			{ str('?') }
-	rule(:zero)			{ str('0') }
-	rule(:comma)		{ str(',') }
-	rule(:bang)			{ str('!') }
 
+	#
 	# pre-lexer rules
+	#
 
 		# numeric digit pre-lexer rules
 
@@ -36,11 +40,6 @@ class Mini < Parslet::Parser
 	rule(:alpha)		{ match['[:alpha:]'] }
 	rule(:alnum)		{ match['[:alnum:]'] }
 	rule(:sign)			{ match['-+'] }
-
-		# unicode char rules
-		# FIXME: UTF-8 / UNICODE does not work
-
-	rule(:greek)		{ match['\u0300-\u03ff'] }
 
 		# complete number pre-lexer rules
 
@@ -64,7 +63,9 @@ class Mini < Parslet::Parser
 	rule(:lit_expr)	{ match['^\\/'] }
 	rule(:regexp)		{ ( code_expr | range_expr | lit_expr ).repeat }
 
+	#
 	# lexer rules
+	#
 
 	rule(:comment)		{ str('##') >> ( str('e') | match['^\n'] ).repeat }
 	rule(:eol)			{ comment.maybe >> lf }
@@ -87,7 +88,17 @@ class Mini < Parslet::Parser
 	rule(:while_ctrl)		{ str('while').as(:while_ctrl) >> space? }
 	rule(:rescope_ctrl)	{ str('rescope').as(:rescope_ctrl) >> space? }
 
-	rule(:symbol)			{ ( ( alpha | us ) >> ( alnum | us ).repeat >> ( bang | q? ).repeat ).as(:symbol) >> space? }
+	rule(:func_symbol)	{ ( ( alpha | us ) >> ( alnum | us ).repeat >> ( bang | q? ).repeat ).as(:symbol) }
+	rule(:greek_symbol)	{ match['\u0300-\u03ff'] }
+	
+	rule(:symbol)			{ ( func_symbol | greek_symbol ).as(:symbol) >> space? }
+	
+	rule(:base)				{ str('...').as(:base) >> space? }
+
+	rule(:dot)				{ str('.').as(:dot) >> space? }
+
+	rule(:single_qu)		{ tick >> match['^\''].repeat >> tick >> space? }
+	rule(:double_qu)		{ quote >> ( code_expr | match['^"'] ).repeat >> quote >> space? } 
 
 	# Single character rules
 #	rule(:lparen)		{ str('(') >> space? }

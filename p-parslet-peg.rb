@@ -65,17 +65,17 @@ class Mini < Parslet::Parser
 
 	rule(:unicode_expr)	{ str('U+') >> hex.repeat(4,4) >> space? }
 
-	rule(:if_ctrl) { str('if') }
-	rule(:then_ctrl) { str('then') }
-	rule(:else_ctrl) { str('else') }
-	rule(:elif_ctrl) { str('elif') }
-	rule(:is_ctrl) { str('is') }
-	rule(:do_ctrl) { str('do') }
-	rule(:wait_ctrl) { str('wait') }
-	rule(:each_ctrl) { str('each') }
-	rule(:all_ctrl) { str('all') }
-	rule(:while_ctrl) { str('while') }
-	rule(:rescope_ctrl) { str('rescope') }
+	rule(:if_ctrl) { str('if').as(:if_ctrl) >> space? }
+	rule(:then_ctrl) { str('then').as(:then_ctrl) >> space? }
+	rule(:else_ctrl) { str('else').as(:else_ctrl) >> space? }
+	rule(:elif_ctrl) { str('elif').as(:elif_ctrl) >> space? }
+	rule(:is_ctrl) { str('is').as(:is_ctrl) >> space? }
+	rule(:do_ctrl) { str('do').as(:do_ctrl) >> space? }
+	rule(:wait_ctrl) { str('wait').as(:wait_ctrl) >> space? }
+	rule(:each_ctrl) { str('each').as(:each_ctrl) >> space? }
+	rule(:all_ctrl) { str('all').as(:all_ctrl) >> space? }
+	rule(:while_ctrl) { str('while').as(:while_ctrl) >> space? }
+	rule(:rescope_ctrl) { str('rescope').as(:rescope_ctrl) >> space? }
 
 	# Single character rules
 #	rule(:lparen)		{ str('(') >> space? }

@@ -237,7 +237,7 @@ class Mini < Parslet::Parser
 
 	rule(:lambda_expr)	{ ( lb >> space? >> v.repeat.as(:vs) >> pipe >> space? >> program >> space? >> rb ).as(:lambda_expr) >> space? }
 
-	rule(:cond_expr)		{ str("unimplemented_replace") }
+	rule(:cond_expr)		{ if_expr >> space? >> elif_expr.repeat >> space? >> else_expr.maybe >> space? }
 	rule(:all_expr)		{ str("unimplemented_replace") }
 	rule(:do_expr)			{ do_ctrl >> space? >> expr >> space? }
 	rule(:wait_expr)		{ wait_ctrl >> space? >> expr >> space? }

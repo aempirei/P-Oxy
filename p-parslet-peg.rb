@@ -106,15 +106,16 @@ class Mini < Parslet::Parser
 
 			# prefix ops
 
-	rule(:full_circum_op)		{ halfop >> halfterm }
+	rule(:full_circum_op)		{ half_op >> half_term }
 
 		# symbol pre-lexer rules
 	rule(:symbol_prefix)	{ at | dollar }
 	rule(:symbol_suffix)	{ bang | q? } 
-	rule(:symbol_infix)	{ alpha | us }
+	rule(:symbol_infix)	{ alnum | us }
+	rule(:symbol_start)	{ alpha | us }
 
 	rule(:left_symbol)	{ symbol_prefix.repeat(1) >> symbol_infix.repeat >> symbol_suffix.repeat }
-	rule(:right_symbol)	{ symbol_infix.repeat(1) >> symbol_suffix.repeat }
+	rule(:right_symbol)	{ symbol_start >> symbol_infix.repeat >> symbol_suffix.repeat }
 	rule(:greek_symbol)	{ match['\u0300-\u03ff'] }
 
 	## integrate not parsing of special symbols somehow
@@ -218,7 +219,7 @@ class Mini < Parslet::Parser
 
 		# expr
 
-	rule(:expr)				{ ( call_expr | cond_expr | f_expr ).as(:expr) }
+	rule(:expr)				{ ( cond_expr | call_expr | f_expr ).as(:expr) }
 
 	rule(:p_expr)			{ lp >> space? >> expr >> space? >> rp >> space? }
 	rule(:literal_expr)	{ string_literal | regexp_literal | numeric_literal }
@@ -241,9 +242,10 @@ class Mini < Parslet::Parser
 	rule(:do_expr)			{ do_ctrl >> space? >> expr >> space? }
 	rule(:wait_expr)		{ wait_ctrl >> space? >> expr >> space? }
 
-	#	circum calls get promoted to full expressions -- this might be weird
+	# circum calls get promoted to full expressions -- this might be weird
+	# but this NEEDS to exist because cirum_expr MUST be f_exprs if needed
 
-	rule(:circum_expr)	{ circum_call }
+	rule(:circum_expr)		{ circum_call }
 
 			# literal_expr
 

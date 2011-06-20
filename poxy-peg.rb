@@ -90,7 +90,6 @@ class Mini < Parslet::Parser
 		# special operators
 
 	rule(:comment_op)		{ str('##') }
-	rule(:list_op)			{ colon }
 	rule(:left_arrow)		{ lt >> dash }
 	rule(:right_arrow)	{ dash >> gt }
 	rule(:free)				{ q? }
@@ -142,10 +141,10 @@ class Mini < Parslet::Parser
 	rule(:eol)			{ comment.maybe >> lf }
 	rule(:terminator)		{ sc | eol | rp.prsnt? | rb.prsnt? }
 
-	rule(:subst_regexp)	{ ( str('s') >> fs >> regexp >> fs >> ( code_expr | lit_expr ).repeat >> fs >> match['imsg'].repeat ).as(:subst_regexp) >> _ }
-	rule(:match_regexp)	{ ( fs >> regexp >> fs >> match['ims'].repeat ).as(:match_regexp) >> _ }
+	rule(:subst_regexp)	{ ( str('s') >> fs >> regexp >> fs >> ( code_expr | lit_expr ).repeat >> fs >> match['imsg'].repeat ).as(:subst_regexp) }
+	rule(:match_regexp)	{ ( fs >> regexp >> fs >> match['ims'].repeat ).as(:match_regexp) }
 
-	rule(:unicode)			{ ( str('U+') >> hex.repeat(4,4) ).as(:unicode) >> _ }
+	rule(:unicode)			{ ( str('U+') >> hex.repeat(4,4) ).as(:unicode) }
 
 	rule(:if_ctrl)			{ str('if') }
 	rule(:then_ctrl)		{ str('then') }
@@ -162,12 +161,12 @@ class Mini < Parslet::Parser
 
 	rule(:base)				{ str('...') }
 
-	rule(:single_qu)		{ ( tick >> match['^\''].repeat >> tick ).as(:single_qu) >> _ }
-	rule(:double_qu)		{ ( quote >> ( code_expr | match['^"'] ).repeat >> quote ).as(:double_qu) >> _ } 
+	rule(:single_qu)		{ ( tick >> match['^\''].repeat >> tick ).as(:single_qu) }
+	rule(:double_qu)		{ ( quote >> ( code_expr | match['^"'] ).repeat >> quote ).as(:double_qu) }
 
-	rule(:integer_val)	{ ( sign.maybe >> ( binary | octal | decimal | hexidecimal ) ).as(:integer_val) >> _ }
-	rule(:real_val)		{ float.as(:real_val) >> _ }
-	rule(:boolean_val)	{ ( boolean_true | boolean_false | boolean_null ).as(:boolean_val) >> _ }
+	rule(:integer_val)	{ ( sign.maybe >> ( binary | octal | decimal | hexidecimal ) ).as(:integer_val) }
+	rule(:real_val)		{ float.as(:real_val) }
+	rule(:boolean_val)	{ ( boolean_true | boolean_false | boolean_null ).as(:boolean_val) }
 
 		# operators (infix)
 
@@ -179,11 +178,11 @@ class Mini < Parslet::Parser
 
 		# link
 
-	rule(:link)				{ ( node.as(:from) >> _ >> right_arrow >> _ >> node.as(:to) ).as(:link) >> _ }
+	rule(:link)				{ ( node.as(:from) >> _ >> right_arrow >> _ >> node.as(:to) ).as(:link) }
 
 		# is -- compare references
 
-	rule(:is_expr)			{ ( node.as(:from) >> _ >> is_ctrl >> _ >> node.as(:to) ).as(:is) >> _ }
+	rule(:is_expr)			{ ( node.as(:from) >> _ >> is_ctrl >> _ >> node.as(:to) ).as(:is) }
 
 		# path
 
@@ -192,10 +191,10 @@ class Mini < Parslet::Parser
 	rule(:op_name)			{ infix_op | full_circum_op }
 	rule(:name)				{ symbol | op_name }
 
-	rule(:p_node)			{ p_expr >> dot >> part.repeat >> name >> _ }
-	rule(:b_node)			{ base >> part.repeat >> name.maybe >> _ }
-	rule(:s_node)			{ part.repeat(1) >> name >> _ }
-	rule(:a_node)			{ symbol >> _ }
+	rule(:p_node)			{ p_expr >> dot >> part.repeat >> name }
+	rule(:b_node)			{ base >> part.repeat >> name.maybe }
+	rule(:s_node)			{ part.repeat(1) >> name }
+	rule(:a_node)			{ symbol }
 
 	rule(:node)				{ p_node | s_node | b_node | a_node }
 
@@ -203,7 +202,7 @@ class Mini < Parslet::Parser
 
 		# rescope
 
-	rule(:rescope)			{ rescope_ctrl.as(:rescope) >> _ >> node.as(:node) >> _ }
+	rule(:rescope)			{ rescope_ctrl.as(:rescope) >> _ >> node.as(:node) }
 
 		# assign
 
@@ -216,7 +215,7 @@ class Mini < Parslet::Parser
 	rule(:assign)			{ list_assign | node_assign }
 
 	rule(:node_assign)	{ ( node.as(:to) >> _ >> left_arrow >> _ >> expr.as(:from) ).as(:node_assign) }
-	rule(:list_assign)	{ ( node.as(:head) >> list_op >> node.as(:tail) >> _ >> left_arrow >> _ >> expr.as(:from) ).as(:list_assign) }
+	rule(:list_assign)	{ ( node.as(:head) >> _ >> colon >> _ >> node.as(:tail) >> _ >> left_arrow >> _ >> expr.as(:from) ).as(:list_assign) }
 
 		# each
 
@@ -226,7 +225,7 @@ class Mini < Parslet::Parser
 
 	rule(:expr)				{ ( cond_expr | is_expr | call_expr | block_expr ).as(:expr) }
 
-	rule(:p_expr)			{ lp >> _ >> expr >> _ >> rp >> _ }
+	rule(:p_expr)			{ lp >> _ >> expr >> _ >> rp }
 	rule(:literal_expr)	{ string_literal | regexp_literal | numeric_literal }
 	rule(:call_expr)		{ infix_call | prefix_call }
 
@@ -234,9 +233,9 @@ class Mini < Parslet::Parser
 
 	rule(:then_expr)		{ then_ctrl >> _ >> block_expr.as(:then) >> big_space }
 
-	rule(:if_expr)			{ if_ctrl >> _ >> block_expr.as(:if) >> big_space >> then_expr.as(:then) >> _ }
-	rule(:elif_expr)		{ elif_ctrl >> _ >> block_expr.as(:elif) >> big_space >> then_expr.as(:then) >> _ }
-	rule(:else_expr)		{ else_ctrl >> _ >> block_expr.as(:else) >> _ }
+	rule(:if_expr)			{ if_ctrl >> _ >> block_expr.as(:if) >> big_space >> then_expr.as(:then) }
+	rule(:elif_expr)		{ elif_ctrl >> _ >> block_expr.as(:elif) >> big_space >> then_expr.as(:then) }
+	rule(:else_expr)		{ else_ctrl >> _ >> block_expr.as(:else) }
 
 	rule(:cond_expr)		{ if_expr >> _ >> elif_expr.repeat >> _ >> else_expr.maybe }
 
@@ -244,10 +243,10 @@ class Mini < Parslet::Parser
 
 	rule(:lambda_expr)	{ ( lb >> _ >> a.repeat.as(:as) >> ( colon >> _ >> a.as(:vas) ).maybe >> pipe >> _ >> program >> _ >> rb ).as(:lambda_expr) }
 
-	rule(:all_expr)		{ all_ctrl >> _ >> block_expr.as(:all) >> _ >> block_expr.as(:where) >> _ }
-	rule(:each)				{ each_ctrl >> _ >> block_expr.as(:each) >> _ >> block_expr.as(:do) >> _ }
-	rule(:do_expr)			{ do_ctrl >> _ >> expr >> _ }
-	rule(:wait_expr)		{ wait_ctrl >> _ >> expr >> _ }
+	rule(:all_expr)		{ all_ctrl >> _ >> block_expr.as(:all) >> _ >> block_expr.as(:where) }
+	rule(:each)				{ each_ctrl >> _ >> block_expr.as(:each) >> _ >> block_expr.as(:do) }
+	rule(:do_expr)			{ do_ctrl >> _ >> expr }
+	rule(:wait_expr)		{ wait_ctrl >> _ >> expr }
 
 	# circum calls get promoted to full expressions -- this might be weird
 	# but this NEEDS to exist because cirum_expr MUST be f_exprs if needed
@@ -275,7 +274,7 @@ class Mini < Parslet::Parser
 
 		# command
 
-	rule(:command)				{ _ >> ( link | assign | each | expr | rescope ).as(:command) >> terminator }
+	rule(:command)				{ _ >> ( link | assign | each | expr | rescope ).as(:command) >> _ >> terminator }
 
 		# program
 

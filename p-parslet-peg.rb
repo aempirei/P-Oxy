@@ -9,7 +9,7 @@ class Mini < Parslet::Parser
 
 	# whitespace rules
 
-	rule(:space)		{ match('[ \t]').repeat(1) }
+	rule(:space)		{ ( match('[ \t]') | bs >> lf ).repeat(1) }
 	rule(:space?)		{ space.maybe }
 
 	# char rules
@@ -59,7 +59,7 @@ class Mini < Parslet::Parser
 	rule(:sign)			{ match['-+'] }
 	rule(:ops)			{ aux_ops | required_ops }
 	rule(:aux_ops)			{ match['$@!?'] }
-	rule(:required_ops)	{ match['-^=+<>\/\\,:;*&~|%#~\`'] }
+	rule(:required_ops)	{ match['-^=+<>\/\\,:*&~|%#~\`'] }
 
 		# complete number pre-lexer rules
 
@@ -92,7 +92,7 @@ class Mini < Parslet::Parser
 		# special operators
 
 	rule(:list_op)			{ colon }
-	rule(:left_arrow)		{ lt }
+	rule(:left_arrow)		{ lt >> dash }
 	rule(:right_arrow)	{ dash >> gt }
 	rule(:free)				{ q? }
 
@@ -100,7 +100,8 @@ class Mini < Parslet::Parser
 
 	rule(:normal_op1)		{ required_ops >> ops.repeat }
 	rule(:normal_op2)		{ special_ops >> ops.repeat(1) }
-	rule(:normal_op)		{ normal_op1 | normal_op2 }
+	rule(:normal_op3)		{ bang >> ops.repeat }
+	rule(:normal_op)		{ ( special_ops >> ops.absnt? ).absnt? >> ( normal_op1 | normal_op2 | normal_op3 ) }
 	rule(:math_op)			{ match['\u2200-\u22ff'] }
 
 			# prefix ops
@@ -113,13 +114,12 @@ class Mini < Parslet::Parser
 	rule(:symbol_infix)	{ alpha | us }
 
 	rule(:left_symbol)	{ symbol_prefix.repeat(1) >> symbol_infix.repeat >> symbol_suffix.repeat }
-	rule(:right_symbol)	{ symbol_prefix.repeat >> symbol_infix.repeat >> symbol_suffix.repeat(1) }
-	rule(:plain_symbol)	{ symbol_infix.repeat(1) }
+	rule(:right_symbol)	{ symbol_infix.repeat(1) >> symbol_suffix.repeat }
 	rule(:greek_symbol)	{ match['\u0300-\u03ff'] }
 
 	## integrate not parsing of special symbols somehow
 
-	rule(:symbol)			{ left_symbol | right_symbol | plain_symbol | greek_symbol }
+	rule(:symbol)			{ left_symbol | right_symbol | greek_symbol }
 
 		# regexp pre-lexer rules
 
@@ -137,7 +137,7 @@ class Mini < Parslet::Parser
 
 	rule(:comment)		{ comment_op >> match['^\n'].repeat }
 	rule(:eol)			{ comment.maybe >> lf }
-	rule(:terminator)		{ sc | eol } # | cp.prsnt? }
+	rule(:terminator)		{ sc | eol | rp.prsnt? | rb.prsnt? }
 
 	rule(:subst_regexp)	{ ( str('s/') >> regexp >> fs >> ( code_expr | lit_expr ).repeat >> fs >> match['imsg'].repeat ).as(:subst_regexp) >> space? }
 	rule(:match_regexp)	{ ( fs >> regexp >> fs >> match['ims'].repeat ).as(:match_regexp) >> space? }
@@ -173,7 +173,7 @@ class Mini < Parslet::Parser
 
 		# operators (infix)
 
-	rule(:infix_op)		{ ( normal_op | math_op ) >> space? }
+	rule(:infix_op)		{ normal_op | math_op }
 
 	# half operators are circumfix operators applied as such
 
@@ -185,22 +185,28 @@ class Mini < Parslet::Parser
 	rule(:nop)				{ space? >> eol }
 
 		# link
-	rule(:link)				{ ( node.as(:from) >> right_arrow >> node.as(:to) ).as(:link) >> space? } 
+
+	rule(:link)				{ ( node.as(:from) >> right_arrow >> node.as(:to) ).as(:link) >> space? }
 
 		# path
 
 		# currently nodes somehow could comeout to be bare ops, which shouldnt be a case
 
-	rule(:op_name)				{ infix_op | full_circum_op }
-
+	rule(:op_name)			{ infix_op | full_circum_op }
 	rule(:name)				{ symbol | op_name }
 
 	rule(:p_node)			{ p_expr >> dot >> part.repeat >> name >> space? }
-	rule(:s_node)			{ base.maybe >> part.repeat >> name >> space? }
+	rule(:b_node)			{ base >> part.repeat >> name.maybe >> space? }
+	rule(:s_node)			{ part.repeat(1) >> name >> space? }
+	rule(:a_node)			{ symbol >> space? }
 
-	rule(:node)				{ p_node | s_node }
+	rule(:node)				{ p_node | s_node | b_node | a_node }
 
 	rule(:part)				{ symbol >> dot }
+
+		# rescope
+
+	rule(:rescope)			{ rescope_ctrl.as(:rescope) >> space? >> node.as(:node) >> space? }
 
 		# assign
 
@@ -229,7 +235,7 @@ class Mini < Parslet::Parser
 
 	rule(:v)				{ symbol.as(:v) >> space? }
 
-	rule(:lambda_expr)	{ ( lb >> space? >> v.repeat.as(:vs) >> pipe >> space? >> rb ).as(:lambda_expr) >> space? }
+	rule(:lambda_expr)	{ ( lb >> space? >> v.repeat.as(:vs) >> pipe >> program >> rb ).as(:lambda_expr) >> space? }
 
 	rule(:cond_expr)		{ str("unimplemented_replace") }
 	rule(:all_expr)		{ str("unimplemented_replace") }
@@ -246,7 +252,7 @@ class Mini < Parslet::Parser
 
 	rule(:f_expr)				{ node | p_expr | literal_expr | lambda_expr | all_expr | do_expr | wait_expr }
 
-	rule(:infix_call)		{ ( f_expr.as(:f) >> infix_op >> p.as(:ps) ).as(:infix_call) }
+	rule(:infix_call)		{ ( f_expr.as(:f) >> space? >> infix_op.as(:infix_op) >> space? >> p.as(:ps) ).as(:infix_call) }
 	rule(:prefix_call)	{ ( f_expr.as(:f) >> p.repeat.as(:ps) ).as(:prefix_call) }
 	rule(:circum_call)	{ ( half_op >> f_expr.as(:f) >> p.repeat.as(:ps) >> half_term ).as(:circum_call) }
 
@@ -254,13 +260,13 @@ class Mini < Parslet::Parser
 
 		# command
 
-	rule(:command)			{ space? >> ( link | assign | each | expr ).as(:command) >> terminator }
+	rule(:command)			{ space? >> ( link | assign | each | expr | rescope ).as(:command) >> terminator }
 
-		# document
+		# program
 
-	rule(:document)		{ ( command | nop ).repeat(1) }
+	rule(:program)		{ ( command | nop ).repeat }
 
-	root :document
+	root :program
 end
 
 input = STDIN.read

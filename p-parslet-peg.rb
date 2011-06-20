@@ -82,8 +82,8 @@ class Mini < Parslet::Parser
 
 		# op pre-lexer rules
 
-	rule(:halfop)		{ ls.repeat(1) | lb.repeat(2) }
-	rule(:halfterm)	{ rs.repeat(1) | rb.repeat(2) }
+	rule(:half_op)		{ ls.repeat(1) | lb.repeat(2) }
+	rule(:half_term)	{ rs.repeat(1) | rb.repeat(2) }
 
 	rule(:special_ops)	{ comment_op | left_arrow | right_arrow | free }
 
@@ -106,7 +106,7 @@ class Mini < Parslet::Parser
 
 			# prefix ops
 
-	rule(:full_circum_op)		{ ( halfop >> star >> halfterm ) }
+	rule(:full_circum_op)		{ halfop >> halfterm }
 
 		# symbol pre-lexer rules
 	rule(:symbol_prefix)	{ at | dollar }
@@ -167,18 +167,9 @@ class Mini < Parslet::Parser
 	rule(:real_val)		{ float.as(:real_val) >> space? }
 	rule(:boolean_val)	{ ( boolean_true | boolean_false | boolean_null ).as(:boolean_val) >> space? }
 
-		# operators (prefix) -- aka symbols or operator nodes -- need to make more consistent descriptions
-
-	rule(:prefix_op)		{ ( full_circum_op ).as(:prefix_op) >> space? }
-
 		# operators (infix)
 
 	rule(:infix_op)		{ normal_op | math_op }
-
-	# half operators are circumfix operators applied as such
-
-	rule(:half_op)			{ halfop.as(:half_op) >> space? }
-	rule(:half_term)		{ halfterm.as(:half_term) >> space? }
 
 	# parser rules
 
@@ -227,11 +218,19 @@ class Mini < Parslet::Parser
 
 		# expr
 
-	rule(:expr)			{ ( call_expr | cond_expr | f_expr ).as(:expr) }
+	rule(:expr)				{ ( call_expr | cond_expr | f_expr ).as(:expr) }
 
 	rule(:p_expr)			{ lp >> space? >> expr >> space? >> rp >> space? }
 	rule(:literal_expr)	{ string_literal | regexp_literal | numeric_literal }
-	rule(:call_expr)		{ infix_call | prefix_call | circum_call }
+	rule(:call_expr)		{ infix_call | prefix_call }
+
+	rule(:big_space)		{ space? >> terminator.repeat >> space? }
+
+	rule(:then_expr)		{ then_ctrl >> big_space >> expr >> big_space }
+
+	rule(:if_expr)			{ if_ctrl >> big_space >> expr >> big_space >> then_expr >> space? }
+	rule(:elif_expr)		{ elif_ctrl >> big_space >> expr >> big_space >> then_expr >> space? }
+	rule(:else_expr)		{ else_ctrl >> big_space >> expr >> space? }
 
 	rule(:v)					{ symbol.as(:v) >> space? }
 
@@ -242,6 +241,10 @@ class Mini < Parslet::Parser
 	rule(:do_expr)			{ do_ctrl >> space? >> expr >> space? }
 	rule(:wait_expr)		{ wait_ctrl >> space? >> expr >> space? }
 
+	#	circum calls get promoted to full expressions -- this might be weird
+
+	rule(:circum_expr)	{ circum_call }
+
 			# literal_expr
 
 	rule(:string_literal)	{ single_qu | double_qu | unicode }
@@ -250,11 +253,11 @@ class Mini < Parslet::Parser
 
 			# call_expr
 
-	rule(:f_expr)				{ literal_expr | p_expr | lambda_expr | all_expr | do_expr | wait_expr | node }
+	rule(:f_expr)				{ literal_expr | p_expr | circum_expr | lambda_expr | all_expr | do_expr | wait_expr | node }
 
 	rule(:infix_call)			{ ( f_expr.as(:f) >> space? >> infix_op.as(:infix_op) >> space? >> p.as(:ps) ).as(:infix_call) }
-	rule(:prefix_call)		{ ( f_expr.as(:f) >> p.repeat.as(:ps) ).as(:prefix_call) }
-	rule(:circum_call)		{ ( half_op >> f_expr.as(:f) >> p.repeat.as(:ps) >> half_term ).as(:circum_call) }
+	rule(:prefix_call)		{ ( f_expr.as(:f) >> space? >> p.repeat.as(:ps) ).as(:prefix_call) }
+	rule(:circum_call)		{ ( half_op >> space? >> f_expr.as(:f) >> space? >> p.repeat.as(:ps) >> space? >> half_term ).as(:circum_call) }
 
 	rule(:p)						{ ( free | expr ).as(:p) >> space? }
 

@@ -5,7 +5,7 @@ require 'rubygems'
 require 'parslet'
 require 'unicode'
 
-class Mini < Parslet::Parser
+class MiniP < Parslet::Parser
 
 	# whitespace rules
 
@@ -217,10 +217,6 @@ class Mini < Parslet::Parser
 	rule(:node_assign)	{ ( node.as(:to) >> _ >> left_arrow >> _ >> expr.as(:from) ).as(:node_assign) }
 	rule(:list_assign)	{ ( node.as(:head) >> _ >> colon >> _ >> node.as(:tail) >> _ >> left_arrow >> _ >> expr.as(:from) ).as(:list_assign) }
 
-		# each
-
-	rule(:each)				{ str("unimplemented_replace") }
-
 		# expr
 
 	rule(:expr)				{ ( cond_expr | is_expr | call_expr | block_expr ).as(:expr) }
@@ -287,10 +283,6 @@ input = STDIN.read
 
 puts "parsing '#{input}'"
 
-p Mini.new.parse(input)
-
-=begin
-
 class IntLit < Struct.new(:int)
 	def eval
 		int.to_i
@@ -303,18 +295,23 @@ class Addition < Struct.new(:left, :right)
 	end
 end
 
-class MiniT < Parslet::Transform
-	rule(:int => simple(:int))                                          { IntLit.new(int) }
-	rule(:left => simple(:left), :right => simple(:right), :op => '+')  { Addition.new(left, right) }
+class PrefixCall < Struct.new(:prefix_call)
+	def eval
+		puts "\n\nHERE WE ARE:\n"
+		p prefix_call
+		exit
+	end
 end
 
-parser = MiniP.new
+class MiniT < Parslet::Transform
+#	rule(:int => simple(:int))                                          { IntLit.new(int) }
+#	rule(:left => simple(:left), :right => simple(:right), :op => '+')  { Addition.new(left, right) }
+	rule(:prefix_call => subtree(:prefix_call))	{ PrefixCall.new(prefix_call) }
+end
+
 transf = MiniT.new
+parser = MiniP.new
 
+ast = transf.apply(parser.parse(input))
 
-
-ast = transf.apply(parser.parse('  puts ( 2+2 +1+1 +2 + 3 , puts(1),1 + 1,puts ( 1,2 , 3), 3 )  '))
-
-ast.eval
-
-=end
+p ast

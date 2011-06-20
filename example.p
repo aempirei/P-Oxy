@@ -42,7 +42,18 @@ float <- 0.e0 : 0.0e-1 : 10.0e+2 : 10.e+0 : -666.e11 : +666.e+10 : +666.666e-0
 ## single greek letters (0300-03ff) are considered symbols
 ## single mathematical operators (2200-22ff) are considered infix operators
 
-π <- 3.14159265 ## PI
+## PI <- 3.14159265 ## PI
+
+## figure the norms
+
+v.{{}} <- { | x * x }
+
+{{v}}
+
+v_norm <- {{v}}
+
+w_norm <- {{w}}
+
 
 ## i hate to allow this but its just an outcome of the fact that i dont
 ## feel like writing a LALR parser and thus need terminators
@@ -82,7 +93,7 @@ y <- Lambda { x | 2 * x }
 
 z <- { x | 2 * x }
 
-θ <- z
+## THETA <- z
 
 ## define string concatenation : a ++ b
 
@@ -109,9 +120,9 @@ string ++ U+534D
 
 rescope Integer
 
-` <- I ## this might be illegal because this in another context is a kind of de-ref of path strings
-, <- I
-~ <- I
+@.` <- I ## this might be illegal because this in another context is a kind of de-ref of path strings
+@., <- I
+@.~ <- I
 
 rescope ...last
 
@@ -127,7 +138,7 @@ matched? <- string ~ match
 ## assign a substitution regex to \.subst which acts as a unary function on
 ## strings. which should be used with the strings/subs monoid
 
-subst <- s/wel+,?\n\r\x33"\"\/\\/fell\n/imsi
+subst <- s//\n/imsi ## s/wel+,?\n\r\x33"\"\/\\/fell\n/imsi
 
 replaced! <- string ~ subst
 
@@ -136,10 +147,10 @@ replaced! <- string ~ subst
 
 list <- $
 
-each (N) while { n | n < 10 } { n | list <- list : if n > 5 then n else n + n }
+each all (N) { n | n < 10 } { n | list <- list : if (n > 5) then (n) else (n + n) }
 
-xs <- List 1:2:3
-xs <- List 1:(List 2:(List 3:(List $)))
+xs <- $:1:2:3:4
+xs <- (List 1):2:3:4
 
 ## breaking a list up is straight forward. this expression is a good example of
 ## the fact that <- works differently than a standard operator in that the l-value
@@ -158,53 +169,53 @@ I <- { x | x }
 ## extending a list type with a size function is easy
 ## just define an autocircumfix operator (. inbetween operator symbols)
 
-List.{{.}} <- { |
+List.{{}} <- { |
     sz <- 0
-    each (@) (I) { a | sz <- sz + 1 }
+    each (@) { a | sz <- sz + 1 }
     sz
 }    
 
 ## array-like access is the wrong way to go about things
 ## but if you want to do it, its easy to define
-## a regular circumfix operator for [] will do it (* inbetween operator symbols)
+## a regular circumfix operator for [] will do it
 
-List.[*] <- { k |
+List.[] <- { k |
     xs <- @
-    each (N) while { n | n < k } { n | x:xs <- xs }
+    each (take 5 N) { n | x:xs <- xs }
     x:xs <- xs
     x
 }    
 
-List.<<.>> <- I
+List.{{}} <- I
 
 ...print ( sprintf "the %dth item of the list is %d\n" 4 list[4] )
 
 ## quicksort a list
 
 quicksort <- { xs |
-    if xs == $ then $           ## if xs is empty, then return an empty list
-    elif {{xs}} == 1 then xs    ## if xs has 1 element then return xs
-    else do { |                 ## otherwise quicksort sub-lists and concatenate
-        x:xs <- xs
-        left <- all (xs) { lx | lx < x }
-        right <- all (xs) { rx | lx >= x }
-        (quicksort left):x:(quicksort right)
-    }
+	if (xs == $) then ($)				## if xs is empty, then return an empty list
+	elif ({{xs}} == 1) then (xs)		## if xs has 1 element then return xs
+	else { |									## otherwise quicksort sub-lists and concatenate
+				x:xs <- xs
+				left <- all (xs) { lx | lx < x }
+				right <- all (xs) { rx | lx >= x }
+				(quicksort left):x:(quicksort right)
+	}
 }    
 
 ## fold left and fold right reduction functions
 
 foldl <- { z f xs |
-    if xs == $ then z
-    else do { |
+    if (xs == $) then (z)
+    else { |
         x:xs <- xs
         foldl (f z x) f xs
     }
 }
 
 foldr <- { z f xs |
-    if xs == $ then z
-    else do { |
+    if (xs == $) then (z)
+    else { |
         x:xs <- xs
         f x (foldr z f xs)
     }
@@ -212,7 +223,7 @@ foldr <- { z f xs |
 
 ## function composition with the circle operator
 
-∘ <- { g f | { x | g (f x) } }
+## CIRCLE <- { g f | { x | g (f x) } }
 
 ## since list building isnt a true lambda we have to make one
 
@@ -221,7 +232,7 @@ concat <- { xs x | xs:x }
 ## basic recursive definition of map
 
 map <- { f xs |
-    if xs == $ then $
+    if (xs == $) then ($)
     else do { |
         x:xs <- xs
         (f x):(map f xs)
@@ -232,7 +243,7 @@ map <- { f xs |
 
 map_each <- { f xs |
     ys <- $
-    each (xs) (I) { x | ys <- ys:(f x) }
+    each (xs) { x | ys <- ys:(f x) }
     ys
 }
 
@@ -252,20 +263,20 @@ map_slick <- { f xs | foldl $ (concat ? (f ?)) xs }
 
 numbers <- Z:Q:N
 
-ℕ <- N ## lol
+## NATURAL_N <- N ## lol
 
-Σ <- { xs | foldl 0 (+) xs }
+## SIGMA <- { xs | foldl 0 (+) xs }
 
-Π <- { xs | foldr 1 (*) xs }
+## PI <- { xs | foldr 1 (*) xs }
 
-sum <- Σ all (ℕ) while { n | n < 5 }
+## sum <- SIGMA all (NATURAL_N) while { n | n < 5 }
 
-prod <- Π all (N) while { n | n < 5 }
+## prod <- PI all (N) while { n | n < 5 }
 
 ## quantifiers when applied to types with total orderings will stop after the first false expression evaluation
 ## when possible, types will be enumerated in their natural order, enumeration is otherwise lazy
 
-each (N) while { n | n < 10 } { n | ...print ( sprintf "number %d\n" n ) }
+each (range 1 9) { n | ...print ( sprintf "number %d\n" n ) }
 
 ## although not a native part of the language, post-increment is easy to implement
 ## this one issue with using it is that operators are considered infix unless the explicit path is referenced and
@@ -305,16 +316,16 @@ later <- { | ...value }
 
 Vector <- List
 
-Vector.<<.>> <- { | sqrt (sum (map { x | x * x } @)) }
+Vector.{{}} <- { | sqrt (sum (map { x | x * x } @)) }
 
 ## FIXME: how should these defer? what if you wanna copy a nullary lambda without executing it or linking it?
 ## should auto-circumfix operators be assigned to unary lambdas instead? should there be a postpone keyword?
 ## the original idea was that if the correct number of parameters to a lamda is passed at any given moment, it
 ## is evaulated, otherwise it is curryed, unless a literal lambda is expressed in which it is postponed.
 
-List.<<.>> -> Vector.<<.>>
-List.<<.>> <- Vector.<<.>>
-List.<<.>> <- wait Vector.<<.>>
+List.{{}} -> Vector.{{}}
+List.{{}} <- Vector.{{}}
+List.{{}} <- wait Vector.{{}}
 
 ## build a small list of 3 items in two different ways as Vectors
 
@@ -325,22 +336,15 @@ v <- Vector 3
 v <- v:4
 v <- v:5
 
-w <- Vector 3:4:5
+w <- (Vector $):3:4:5
 
-## figure the norms
-## change circum fix notation to not use <<.>> or <<*>> for assignment, and they are always auto circumfix
-
-v.<<>> <- { | x * x }
-
-v_norm <- <<v>>
-
-w_norm <- <<w>>
+var_args <- { a b c: xs | what the fuck xs is_a list }
 
 ## each special scoping path has both a symbolic and named form
 
-...print if root is ... then "root is ...\n" else "root is not ...\n"
-...print if local is ! then "local is !\n" else "local is not !\n"
-...print if self is @ then "self is @\n" else "self is not @\n"
+...print (if (root is ...) then ("root is ...\n") else ("root is not ...\n"))
+...print (if (local is @!) then "local is !\n" else "local is not !\n")
+...print (if (self is @) then "self is @\n" else "self is not @\n")
 
 ## define a function that adds 3 numbers together
 
@@ -368,11 +372,13 @@ child3.parent -> @
 
 rescope ...
 
-## back-tick means treat string as path FIXME: i dont think this is actually dealt with
-
-each 'child1':'child2':'child3' (I) { s |
-    rescope parent.`s
+each ($:'child1':'child2':'child3') { s |
+    rescope parent
     ...print ( sprintf "%s from %s\n" @ parent )
 }
 
 ## FIXME: how does one get a list of adjacent nodes?
+
+a is b
+
+a b c d

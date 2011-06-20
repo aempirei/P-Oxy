@@ -16,9 +16,9 @@ class Mini < Parslet::Parser
 
 	rule(:lf)			{ str("\n") }
 	rule(:cr)			{ str("\r") }
-	rule(:bs)			{ str('\\') }
-	rule(:tick)			{ str('\'') }
-	rule(:quote)		{ str('"') }
+	rule(:bs)			{ str("\\") }
+	rule(:tick)			{ str("\'") }
+	rule(:quote)		{ str("\"") }
 	rule(:comma)		{ str(',') }
 	rule(:zero)			{ str('0') }
 	rule(:bang)			{ str('!') }
@@ -124,11 +124,11 @@ class Mini < Parslet::Parser
 		# regexp pre-lexer rules
 
 	rule(:sym)			{ match['*?|.+^$\[\]{}\(\)'] }	# these are only for inside regexp
-	rule(:code)			{ alpha | str('x') >> hex.repeat(2,2) | zero >> oct.repeat(0,3) | bs | fs | sym | tick | quote }
+	rule(:code)			{ ( str('x') >> hex.repeat(2,2) ) | alpha | ( zero >> oct.repeat(0,3) ) | bs | fs | sym | tick | quote }
 
 	rule(:range_expr)	{ lb >> ( decimal >> comma.maybe | decimal >> comma >> decimal | comma >> decimal ) >> rb }
 	rule(:code_expr)	{ bs >> code }
-	rule(:lit_expr)	{ match['^\\/'] }
+	rule(:lit_expr)	{ match['^\\\/'] }
 	rule(:regexp)		{ ( code_expr | range_expr | lit_expr ).repeat }
 
 	#
@@ -139,7 +139,7 @@ class Mini < Parslet::Parser
 	rule(:eol)			{ comment.maybe >> lf }
 	rule(:terminator)		{ sc | eol | rp.prsnt? | rb.prsnt? }
 
-	rule(:subst_regexp)	{ ( str('s/') >> regexp >> fs >> ( code_expr | lit_expr ).repeat >> fs >> match['imsg'].repeat ).as(:subst_regexp) >> space? }
+	rule(:subst_regexp)	{ ( str('s') >> fs >> regexp >> fs >> ( code_expr | lit_expr ).repeat >> fs >> match['imsg'].repeat ).as(:subst_regexp) >> space? }
 	rule(:match_regexp)	{ ( fs >> regexp >> fs >> match['ims'].repeat ).as(:match_regexp) >> space? }
 
 	rule(:unicode)			{ ( str('U+') >> hex.repeat(4,4) ).as(:unicode) >> space? }
@@ -186,7 +186,7 @@ class Mini < Parslet::Parser
 
 		# link
 
-	rule(:link)				{ ( node.as(:from) >> right_arrow >> node.as(:to) ).as(:link) >> space? }
+	rule(:link)				{ ( node.as(:from) >> space? >> right_arrow >> space? >> node.as(:to) ).as(:link) >> space? }
 
 		# path
 
@@ -218,8 +218,8 @@ class Mini < Parslet::Parser
 	
 	rule(:assign)			{ list_assign | node_assign }
 
-	rule(:node_assign)	{ ( node.as(:to) >> left_arrow >> expr.as(:from) ).as(:node_assign) }
-	rule(:list_assign)	{ ( node.as(:head) >> list_op >> node.as(:tail) >> left_arrow >> expr.as(:from) ).as(:list_assign) }
+	rule(:node_assign)	{ ( node.as(:to) >> space? >> left_arrow >> space? >> expr.as(:from) ).as(:node_assign) }
+	rule(:list_assign)	{ ( node.as(:head) >> list_op >> node.as(:tail) >> space? >> left_arrow >> space? >> expr.as(:from) ).as(:list_assign) }
 
 		# each
 
@@ -229,18 +229,18 @@ class Mini < Parslet::Parser
 
 	rule(:expr)			{ ( call_expr | cond_expr | f_expr ).as(:expr) }
 
-	rule(:p_expr)			{ lp >> expr >> rp >> space? }
+	rule(:p_expr)			{ lp >> space? >> expr >> space? >> rp >> space? }
 	rule(:literal_expr)	{ string_literal | regexp_literal | numeric_literal }
 	rule(:call_expr)		{ infix_call | prefix_call | circum_call }
 
-	rule(:v)				{ symbol.as(:v) >> space? }
+	rule(:v)					{ symbol.as(:v) >> space? }
 
-	rule(:lambda_expr)	{ ( lb >> space? >> v.repeat.as(:vs) >> pipe >> program >> rb ).as(:lambda_expr) >> space? }
+	rule(:lambda_expr)	{ ( lb >> space? >> v.repeat.as(:vs) >> pipe >> space? >> program >> space? >> rb ).as(:lambda_expr) >> space? }
 
 	rule(:cond_expr)		{ str("unimplemented_replace") }
 	rule(:all_expr)		{ str("unimplemented_replace") }
-	rule(:do_expr)			{ do_ctrl >> expr }
-	rule(:wait_expr)		{ wait_ctrl >> expr }
+	rule(:do_expr)			{ do_ctrl >> space? >> expr >> space? }
+	rule(:wait_expr)		{ wait_ctrl >> space? >> expr >> space? }
 
 			# literal_expr
 
@@ -250,21 +250,21 @@ class Mini < Parslet::Parser
 
 			# call_expr
 
-	rule(:f_expr)				{ node | p_expr | literal_expr | lambda_expr | all_expr | do_expr | wait_expr }
+	rule(:f_expr)				{ literal_expr | p_expr | lambda_expr | all_expr | do_expr | wait_expr | node }
 
-	rule(:infix_call)		{ ( f_expr.as(:f) >> space? >> infix_op.as(:infix_op) >> space? >> p.as(:ps) ).as(:infix_call) }
-	rule(:prefix_call)	{ ( f_expr.as(:f) >> p.repeat.as(:ps) ).as(:prefix_call) }
-	rule(:circum_call)	{ ( half_op >> f_expr.as(:f) >> p.repeat.as(:ps) >> half_term ).as(:circum_call) }
+	rule(:infix_call)			{ ( f_expr.as(:f) >> space? >> infix_op.as(:infix_op) >> space? >> p.as(:ps) ).as(:infix_call) }
+	rule(:prefix_call)		{ ( f_expr.as(:f) >> p.repeat.as(:ps) ).as(:prefix_call) }
+	rule(:circum_call)		{ ( half_op >> f_expr.as(:f) >> p.repeat.as(:ps) >> half_term ).as(:circum_call) }
 
-	rule(:p)			{ ( free | expr ).as(:p) >> space? }
+	rule(:p)						{ ( free | expr ).as(:p) >> space? }
 
 		# command
 
-	rule(:command)			{ space? >> ( link | assign | each | expr | rescope ).as(:command) >> terminator }
+	rule(:command)				{ space? >> ( link | assign | each | expr | rescope ).as(:command) >> terminator }
 
 		# program
 
-	rule(:program)		{ ( command | nop ).repeat }
+	rule(:program)				{ ( command | nop ).repeat }
 
 	root :program
 end

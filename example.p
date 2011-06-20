@@ -196,7 +196,7 @@ quicksort <- { xs |
 
 foldl <- { z f xs |
     if xs == $ then z
-    else do {
+    else do { |
         x:xs <- xs
         foldl (f z x) f xs
     }
@@ -328,6 +328,9 @@ v <- v:5
 w <- Vector 3:4:5
 
 ## figure the norms
+## change circum fix notation to not use <<.>> or <<*>> for assignment, and they are always auto circumfix
+
+v.<<>> <- { | x * x }
 
 v_norm <- <<v>>
 

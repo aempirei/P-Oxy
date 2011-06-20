@@ -24,6 +24,7 @@ class Mini < Parslet::Parser
 	rule(:bang)			{ str('!') }
 	rule(:dash)			{ str('-') }
 	rule(:star)			{ str('*') }
+	rule(:pipe)			{ str('|') }
 	rule(:dot)			{ str('.') }
 	rule(:eq)			{ str('=') }
 	rule(:fs)			{ str('/') }
@@ -33,6 +34,8 @@ class Mini < Parslet::Parser
 	rule(:rp)			{ str(')') }
 	rule(:q?)			{ str('?') }
 	rule(:colon)		{ str(':') }
+	rule(:dollar)		{ str('$') }
+	rule(:at)			{ str('@') }
 	rule(:lt)			{ str('<') }
 	rule(:gt)			{ str('>') }
 	rule(:ls)			{ str('[') }
@@ -54,7 +57,9 @@ class Mini < Parslet::Parser
 	rule(:alnum)		{ match['[:alnum:]'] }
 	rule(:nonzero)		{ match['1-9'] }
 	rule(:sign)			{ match['-+'] }
-	rule(:ops)			{ match['-^=+\[\]<>?\/\\,?:;*&~|%#~\`\$@!{}'] }
+	rule(:ops)			{ aux_ops | required_ops }
+	rule(:aux_ops)			{ match['$@!?'] }
+	rule(:required_ops)	{ match['-^=+<>\/\\,:;*&~|%#~\`'] }
 
 		# complete number pre-lexer rules
 
@@ -77,27 +82,48 @@ class Mini < Parslet::Parser
 
 		# op pre-lexer rules
 
-	rule(:halfop)		{ lt.repeat(2) | ls.repeat(2) | lb.repeat(2) }
-	rule(:halfterm)	{ gt.repeat(2) | rs.repeat(2) | rb.repeat(2) }
+	rule(:halfop)		{ ls.repeat(1) | lb.repeat(2) }
+	rule(:halfterm)	{ rs.repeat(1) | rb.repeat(2) }
+
+	rule(:special_ops)	{ comment_op | left_arrow | right_arrow | free }
+
+	rule(:comment_op)		{ str('##') }
+
+		# special operators
+
+	rule(:list_op)			{ colon }
+	rule(:left_arrow)		{ lt }
+	rule(:right_arrow)	{ dash >> gt }
+	rule(:free)				{ q? }
 
 			# infix ops
 
-	rule(:normal_op)		{ str('##').absnt? >> ops.repeat(1) }
+	rule(:normal_op1)		{ required_ops >> ops.repeat }
+	rule(:normal_op2)		{ special_ops >> ops.repeat(1) }
+	rule(:normal_op)		{ normal_op1 | normal_op2 }
 	rule(:math_op)			{ match['\u2200-\u22ff'] }
 
 			# prefix ops
 
-	rule(:auto_op)			{ ( halfop >> dot >> halfterm ) }
-	rule(:circum_op)		{ ( halfop >> star >> halfterm ) }
+	rule(:full_circum_op)		{ ( halfop >> star >> halfterm ) }
 
 		# symbol pre-lexer rules
+	rule(:symbol_prefix)	{ at | dollar }
+	rule(:symbol_suffix)	{ bang | q? } 
+	rule(:symbol_infix)	{ alpha | us }
 
-	rule(:func_symbol)	{ ( ( alpha | us ) >> ( alnum | us ).repeat >> ( bang | q? ).repeat ) }
+	rule(:left_symbol)	{ symbol_prefix.repeat(1) >> symbol_infix.repeat >> symbol_suffix.repeat }
+	rule(:right_symbol)	{ symbol_prefix.repeat >> symbol_infix.repeat >> symbol_suffix.repeat(1) }
+	rule(:plain_symbol)	{ symbol_infix.repeat(1) }
 	rule(:greek_symbol)	{ match['\u0300-\u03ff'] }
+
+	## integrate not parsing of special symbols somehow
+
+	rule(:symbol)			{ left_symbol | right_symbol | plain_symbol | greek_symbol }
 
 		# regexp pre-lexer rules
 
-	rule(:sym)			{ match['*?|.+^$\[\]{}'] }
+	rule(:sym)			{ match['*?|.+^$\[\]{}\(\)'] }	# these are only for inside regexp
 	rule(:code)			{ alpha | str('x') >> hex.repeat(2,2) | zero >> oct.repeat(0,3) | bs | fs | sym | tick | quote }
 
 	rule(:range_expr)	{ lb >> ( decimal >> comma.maybe | decimal >> comma >> decimal | comma >> decimal ) >> rb }
@@ -109,29 +135,29 @@ class Mini < Parslet::Parser
 	# lexer rules
 	#
 
-	rule(:comment)		{ str('##') >> ( str('e') | match['^\n'] ).repeat }
+	rule(:comment)		{ comment_op >> match['^\n'].repeat }
 	rule(:eol)			{ comment.maybe >> lf }
-	rule(:terminator)		{ sc | eol }
+	rule(:terminator)		{ sc | eol } # | cp.prsnt? }
 
 	rule(:subst_regexp)	{ ( str('s/') >> regexp >> fs >> ( code_expr | lit_expr ).repeat >> fs >> match['imsg'].repeat ).as(:subst_regexp) >> space? }
 	rule(:match_regexp)	{ ( fs >> regexp >> fs >> match['ims'].repeat ).as(:match_regexp) >> space? }
 
 	rule(:unicode)			{ ( str('U+') >> hex.repeat(4,4) ).as(:unicode) >> space? }
 
-	rule(:if_ctrl)			{ str('if').as(:if_ctrl) >> space? }
-	rule(:then_ctrl)		{ str('then').as(:then_ctrl) >> space? }
-	rule(:else_ctrl)		{ str('else').as(:else_ctrl) >> space? }
-	rule(:elif_ctrl)		{ str('elif').as(:elif_ctrl) >> space? }
-	rule(:is_ctrl)			{ str('is').as(:is_ctrl) >> space? }
-	rule(:do_ctrl)			{ str('do').as(:do_ctrl) >> space? }
-	rule(:wait_ctrl)		{ str('wait').as(:wait_ctrl) >> space? }
-	rule(:each_ctrl)		{ str('each').as(:each_ctrl) >> rpace? }
-	rule(:all_ctrl)		{ str('all').as(:all_ctrl) >> space? }
-	rule(:while_ctrl)		{ str('while').as(:while_ctrl) >> space? }
-	rule(:rescope_ctrl)	{ str('rescope').as(:rescope_ctrl) >> space? }
+	rule(:if_ctrl)			{ str('if') >> space? }
+	rule(:then_ctrl)		{ str('then') >> space? }
+	rule(:else_ctrl)		{ str('else') >> space? }
+	rule(:elif_ctrl)		{ str('elif') >> space? }
+	rule(:is_ctrl)			{ str('is') >> space? }
+	rule(:do_ctrl)			{ str('do') >> space? }
+	rule(:wait_ctrl)		{ str('wait') >> space? }
+	rule(:each_ctrl)		{ str('each') >> space? }
+	rule(:all_ctrl)		{ str('all') >> space? }
+	rule(:while_ctrl)		{ str('while') >> space? }
+	rule(:rescope_ctrl)	{ str('rescope') >> space? }
 
-	rule(:symbol)			{ func_symbol | greek_symbol }
-	
+	rule(:special_symbols)	{ if_ctrl | then_ctrl | else_ctrl | elif_ctrl | is_ctrl | do_ctrl | wait_ctrl | each_ctrl | all_ctrl | while_ctrl | rescope_ctrl }
+
 	rule(:base)				{ str('...') }
 
 	rule(:single_qu)		{ ( tick >> match['^\''].repeat >> tick ).as(:single_qu) >> space? }
@@ -143,56 +169,51 @@ class Mini < Parslet::Parser
 
 		# operators (prefix) -- aka symbols or operator nodes -- need to make more consistent descriptions
 
-	rule(:prefix_op)		{ ( auto_op | circum_op ).as(:prefix_op) >> space? }
+	rule(:prefix_op)		{ ( full_circum_op ).as(:prefix_op) >> space? }
 
 		# operators (infix)
 
-	rule(:infix_op)		{ ( normal_op | math_op ).as(:infix_op) >> space? }
+	rule(:infix_op)		{ ( normal_op | math_op ) >> space? }
 
-	# :op is just regular operators -- both prefix and infix, not special ops (list_op) or half-ops
-
-	rule(:op)				{ infix_op | auto_op | circum_op }
-
-		# half operators are circumfix operators applied as such
+	# half operators are circumfix operators applied as such
 
 	rule(:half_op)			{ halfop.as(:half_op) >> space? }
 	rule(:half_term)		{ halfterm.as(:half_term) >> space? }
-
-		# list_op is a special operator / constructor
-
-	rule(:list_op)			{ colon.as(:list_op) >> ops.absnt? >> space? }
-
-	# WARNING: there may be issues with these
-
-	rule(:left_bracket)	{ lb >> ops.absnt? >> space? }
-	rule(:right_bracket)	{ rb >> ops.absnt? >> space? }
-	rule(:left_arrow)		{ lt >> dash >> ops.absnt? >> space? }
-	rule(:right_arrow)	{ dash >> gt >> ops.absnt? >> space? }
-	rule(:free)				{ q?>> ops.absnt? >> space? }
 
 	# parser rules
 
 	rule(:nop)				{ space? >> eol }
 
 		# link
-
 	rule(:link)				{ ( node.as(:from) >> right_arrow >> node.as(:to) ).as(:link) >> space? } 
 
-	rule(:node)				{ ( symbol_node | op_node | base ) >> space? }
+		# path
 
-	rule(:symbol_node)	{ path.maybe >> symbol }
-	rule(:op_node)			{ path.maybe >> op }
+		# currently nodes somehow could comeout to be bare ops, which shouldnt be a case
 
-	rule(:path)				{ base >> part.repeat | part.repeat(1) }
+	rule(:op_name)				{ infix_op | full_circum_op }
+
+	rule(:name)				{ symbol | op_name }
+
+	rule(:p_node)			{ p_expr >> dot >> part.repeat >> name >> space? }
+	rule(:s_node)			{ base.maybe >> part.repeat >> name >> space? }
+
+	rule(:node)				{ p_node | s_node }
 
 	rule(:part)				{ symbol >> dot }
 
 		# assign
+
+		# important fact : nodes can always accept assignment -- this is a critical distinction from expressions.
+		# expressions cannot accept assignment and this distinction arises from function calls. as you can always
+		# attempt to call a function, which MAY be a node buy also MAY be a p-expression or a literal expression.
+		# literals are good examples of ambiguity, literals are always treated like functions, and never like nodes.
+		# and because literals must be considered constant, they cannot accept assignment.
 	
 	rule(:assign)			{ list_assign | node_assign }
 
-	rule(:node_assign)	{ node.as(:to) >> left_arrow >> expr.as(:from) }
-	rule(:list_assign)	{ node.as(:head) >> list_op >> node.as(:tail) >> left_arrow >> expr.as(:from) }
+	rule(:node_assign)	{ ( node.as(:to) >> left_arrow >> expr.as(:from) ).as(:node_assign) }
+	rule(:list_assign)	{ ( node.as(:head) >> list_op >> node.as(:tail) >> left_arrow >> expr.as(:from) ).as(:list_assign) }
 
 		# each
 
@@ -200,19 +221,20 @@ class Mini < Parslet::Parser
 
 		# expr
 
-	rule(:expr1)			{ call_expr | literal_expr | lambda_expr | cond_expr | all_expr | list_expr | do_expr | wait_expr }
-	rule(:expr2)			{ lp >> expr >> rp }
+	rule(:expr)			{ ( call_expr | cond_expr | f_expr ).as(:expr) }
 
-	rule(:expr)				{ ( expr1 | expr2 ).as(:expr) >> space? }
-
-	rule(:call_expr)		{ infix_call | prefix_call | circum_call }
+	rule(:p_expr)			{ lp >> expr >> rp >> space? }
 	rule(:literal_expr)	{ string_literal | regexp_literal | numeric_literal }
-	rule(:lambda_expr)	{ str("unimplemented_replace") }
+	rule(:call_expr)		{ infix_call | prefix_call | circum_call }
+
+	rule(:v)				{ symbol.as(:v) >> space? }
+
+	rule(:lambda_expr)	{ ( lb >> space? >> v.repeat.as(:vs) >> pipe >> space? >> rb ).as(:lambda_expr) >> space? }
+
 	rule(:cond_expr)		{ str("unimplemented_replace") }
 	rule(:all_expr)		{ str("unimplemented_replace") }
-	rule(:list_expr)		{ str("left_recursion_breaker") >> param >> list_op >> param } # FIXME: left recursion problem
-	rule(:do_expr)			{ str("unimplemented_replace") }
-	rule(:wait_expr)		{ str("unimplemented_replace") }
+	rule(:do_expr)			{ do_ctrl >> expr }
+	rule(:wait_expr)		{ wait_ctrl >> expr }
 
 			# literal_expr
 
@@ -222,11 +244,13 @@ class Mini < Parslet::Parser
 
 			# call_expr
 
-	rule(:infix_call)		{ str("left_recursion_breaker") >> param >> infix_op >> param } # FIXME: left recursion problem
-	rule(:prefix_call)	{ node >> param.repeat }
-	rule(:circum_call)	{ half_op >> param.repeat >> half_term }
+	rule(:f_expr)				{ node | p_expr | literal_expr | lambda_expr | all_expr | do_expr | wait_expr }
 
-	rule(:param)			{ expr | free } # FIXME: left recursion problem
+	rule(:infix_call)		{ ( f_expr.as(:f) >> infix_op >> p.as(:ps) ).as(:infix_call) }
+	rule(:prefix_call)	{ ( f_expr.as(:f) >> p.repeat.as(:ps) ).as(:prefix_call) }
+	rule(:circum_call)	{ ( half_op >> f_expr.as(:f) >> p.repeat.as(:ps) >> half_term ).as(:circum_call) }
+
+	rule(:p)			{ ( free | expr ).as(:p) >> space? }
 
 		# command
 
